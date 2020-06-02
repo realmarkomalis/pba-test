@@ -15,6 +15,7 @@ type PasswordlessAuth struct {
 	Domain       string
 	ClientID     string
 	ClientSecret string
+	RedirectURL  string
 }
 
 type loginResponse struct {
@@ -71,8 +72,8 @@ func (p PasswordlessAuth) RequestLogin(username string) error {
 		"connection":    "email",
 		"send":          "link",
 		"authParams": map[string]interface{}{
-			"scope": "openid profile email",
-			// "redirect_uri": "http://127.0.0.1:8080/login",
+			"scope":        "openid profile email",
+			"redirect_uri": p.RedirectURL,
 		},
 	})
 	if err != nil {

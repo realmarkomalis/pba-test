@@ -31,6 +31,7 @@ func (h LoginRequestsHandler) Create(w http.ResponseWriter, r *http.Request) {
 		Domain:       viper.GetString("auth_service.domain"),
 		ClientID:     viper.GetString("auth_service.client_id"),
 		ClientSecret: viper.GetString("auth_service.client_secret"),
+		RedirectURL:  viper.GetString("auth_service.redirect_url"),
 	}
 	um := services.UserManagementService{
 		Domain:       viper.GetString("user_management_service.domain"),
