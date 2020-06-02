@@ -53,8 +53,7 @@ func (u UserManagementService) requestAccessToken() (string, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= 300 {
-		fmt.Println("error requesting user management access token")
-		fmt.Println(resp.StatusCode)
+		fmt.Printf("Error (%d) requesting user management access token", resp.StatusCode)
 		return "", errors.New("Unable to get access token")
 	}
 

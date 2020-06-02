@@ -33,10 +33,10 @@ func (h LoginRequestsHandler) Create(w http.ResponseWriter, r *http.Request) {
 		ClientSecret: viper.GetString("auth_service.client_secret"),
 	}
 	um := services.UserManagementService{
-		Domain:       viper.GetString("auth_service.domain"),
-		ClientID:     viper.GetString("auth_service.client_id"),
-		ClientSecret: viper.GetString("auth_service.client_secret"),
-		Audience:     viper.GetString("auth_service.audience"),
+		Domain:       viper.GetString("user_management_service.domain"),
+		ClientID:     viper.GetString("user_management_service.client_id"),
+		ClientSecret: viper.GetString("user_management_service.client_secret"),
+		Audience:     viper.GetString("user_management_service.audience"),
 		AccessToken:  "",
 	}
 	ts := services.NewTokenService(
