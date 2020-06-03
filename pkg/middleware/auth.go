@@ -12,12 +12,6 @@ import (
 	"gitlab.com/markomalis/packback-api/pkg/services"
 )
 
-var tokenService *services.TokenService = services.NewTokenService(
-	viper.GetString("token_service.secret_key"),
-	viper.GetString("token_service.issuer"),
-	viper.GetInt("token_service.minutes_valid"),
-)
-
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("X-PackBack-Auth")
@@ -28,6 +22,11 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		}
 
 		user := &entities.User{}
+		tokenService := services.NewTokenService(
+			viper.GetString("token_service.secret_key"),
+			viper.GetString("token_service.issuer"),
+			viper.GetInt("token_service.minutes_valid"),
+		)
 		err := tokenService.Decode(authHeader, user)
 		if err != nil {
 			fmt.Printf("Error decoding token: %s", err)
