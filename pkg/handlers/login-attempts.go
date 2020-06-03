@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/jinzhu/gorm"
@@ -62,7 +63,7 @@ func (h *LoginAttemptsHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := a.LoginUserWithCode(body.Email, body.Code)
+	user, err := a.LoginUserWithCode(strings.ToLower(body.Email), body.Code)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

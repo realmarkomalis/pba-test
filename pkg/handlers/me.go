@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/jinzhu/gorm"
 	"github.com/spf13/viper"
@@ -17,7 +18,7 @@ func (h MeHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	u := getUserFromRequestContext(r, w)
 	ur := repositories.UserRepository{DB: h.DB}
 
-	user, err := ur.GetByEmail(u.Email)
+	user, err := ur.GetByEmail(strings.ToLower(u.Email))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return

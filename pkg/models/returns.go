@@ -57,4 +57,5 @@ type PickupSlot struct {
 	EndDateTime   time.Time
 	User          User
 	UserID        uint `gorm:"-"`
+	Booked        bool `gorm:"default:false"`
 }

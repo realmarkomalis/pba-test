@@ -93,6 +93,7 @@ func (r ReturnRepository) CreateReturnRequest(userID, packageID, slotID uint) (*
 
 	err = r.DB.Model(&slot).Updates(models.PickupSlot{
 		UserID: userID,
+		Booked: true,
 	}).Error
 	if err != nil {
 		return nil, err
