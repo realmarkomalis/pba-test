@@ -17,6 +17,7 @@ type IReturnRepository interface {
 	CreatePackagePickup(userID, packageID uint) (*entities.PackagePickup, error)
 	GetPackageDispatches(userID uint) ([]*entities.Return, error)
 	GetPackagePickups(userID uint) ([]*entities.Return, error)
+	GetReturnRequests(userID uint) ([]*entities.Return, error)
 }
 
 type ReturnRepository struct {
@@ -209,6 +210,48 @@ func (r ReturnRepository) GetPackageDispatches(userID uint) ([]*entities.Return,
 
 	returnIDs := []uint{}
 	for _, d := range dispatches {
+		returnIDs = append(returnIDs, d.ReturnID)
+	}
+
+	err = r.DB.
+		Preload("Package").
+		Where("id in (?)", returnIDs).
+		Find(&rets).
+		Error
+	if err != nil {
+		return nil, err
+	}
+
+	returns := []*entities.Return{}
+	for _, ret := range rets {
+		returns = append(returns, &entities.Return{
+			ID:        ret.ID,
+			Status:    ret.Status.String(),
+			CreatedAt: ret.CreatedAt,
+			Package: entities.Package{
+				ID:   ret.Package.ID,
+				Name: ret.Package.Name,
+			},
+		})
+	}
+
+	return returns, nil
+}
+
+func (r ReturnRepository) GetReturnRequests(userID uint) ([]*entities.Return, error) {
+	rets := []models.Return{}
+	returnRequests := []models.ReturnRequest{}
+
+	err := r.DB.
+		Where("user_id = ?", userID).
+		Find(&returnRequests).
+		Error
+	if err != nil {
+		return nil, err
+	}
+
+	returnIDs := []uint{}
+	for _, d := range returnRequests {
 		returnIDs = append(returnIDs, d.ReturnID)
 	}
 

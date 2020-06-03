@@ -99,10 +99,17 @@ func (h ReturnsRequestsHandler) GetReturns(w http.ResponseWriter, r *http.Reques
 
 	if user.UserRole.Name == "restaurant" {
 		h.GetPackageDispatches(w, r)
+		return
 	}
 
 	if user.UserRole.Name == "rider" {
 		h.GetPackagePickups(w, r)
+		return
+	}
+
+	if user.UserRole.Name == "customer" {
+		h.GetReturnRequests(w, r)
+		return
 	}
 }
 
@@ -139,6 +146,30 @@ func (h ReturnsRequestsHandler) GetPackageDispatches(w http.ResponseWriter, r *h
 
 	rr := repositories.ReturnRepository{h.DB}
 	returns, err := rr.GetPackageDispatches(user.ID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	js, err := json.Marshal(returns)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
+
+func (h ReturnsRequestsHandler) GetReturnRequests(w http.ResponseWriter, r *http.Request) {
+	user := r.Context().Value("User").(*entities.User)
+	if user == nil {
+		http.Error(w, "No user found", http.StatusInternalServerError)
+		return
+	}
+
+	rr := repositories.ReturnRepository{h.DB}
+	returns, err := rr.GetReturnRequests(user.ID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
