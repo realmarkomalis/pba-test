@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	loadConfig("config", ".")
+	loadConfigS("config", ".")
 	dbString := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=disable",
 		viper.GetString("db.host"),
 		viper.GetString("db.port"),
@@ -46,4 +46,13 @@ func createSlot(db *gorm.DB, d time.Time) {
 		EndDateTime:   d.Add(time.Hour * 1),
 	}
 	db.Create(&slot)
+}
+
+func loadConfigS(filename, path string) {
+	viper.SetConfigName(filename)
+	viper.AddConfigPath(path)
+	err := viper.ReadInConfig()
+	if err != nil {
+		panic(fmt.Errorf("Fatal error config file: %s", err))
+	}
 }
