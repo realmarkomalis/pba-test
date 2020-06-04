@@ -1,3 +1,3 @@
-package internals
+package internal
 
 func SetupContainers() {}

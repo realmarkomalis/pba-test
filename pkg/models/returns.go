@@ -40,8 +40,9 @@ type ReturnRequest struct {
 	gorm.Model
 	User         User
 	UserID       uint
-	ReturnID     uint
+	PickupSlot   PickupSlot
 	PickupSlotID uint
+	ReturnID     uint
 }
 
 type PackagePickup struct {

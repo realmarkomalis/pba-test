@@ -280,3 +280,55 @@ func (r ReturnRepository) GetReturnRequests(userID uint) ([]*entities.Return, er
 
 	return returns, nil
 }
+
+func (r ReturnRepository) GetAllReturnRequests() ([]entities.PickupRequest, error) {
+	rets := []models.Return{}
+	err := r.DB.
+		Preload("ReturnRequest").
+		Preload("Package").
+		Where("status = ?", models.Scheduled).
+		Find(&rets).
+		Error
+	if err != nil {
+		return nil, err
+	}
+
+	prIDs := []uint{}
+	for _, ret := range rets {
+		prIDs = append(prIDs, ret.ReturnRequest.ID)
+	}
+
+	rrs := []models.ReturnRequest{}
+	r.DB.Preload("PickupSlot").Preload("User").Preload("User.UserAddresses").Where(prIDs).Find(&rrs)
+
+	prs := []entities.PickupRequest{}
+	for _, ret := range rrs {
+		address := entities.UserAddress{}
+		if len(ret.User.UserAddresses) > 0 {
+			a := ret.User.UserAddresses[0]
+			address.PostalCode = a.PostalCode
+			address.StreetName = a.StreetName
+			address.HouseNumber = a.HouseNumber
+			address.HouseNumberSuffix = a.HouseNumberSuffix
+			address.City = a.City
+		}
+		prs = append(prs, entities.PickupRequest{
+			ID: ret.ID,
+			User: entities.User{
+				ID:    ret.User.ID,
+				Email: ret.User.Email,
+				UserAddresses: []entities.UserAddress{
+					address,
+				},
+			},
+			PickupSlot: entities.PickupSlot{
+				ID:            ret.PickupSlot.ID,
+				StartDateTime: ret.PickupSlot.StartDateTime,
+				EndDateTime:   ret.PickupSlot.EndDateTime,
+			},
+		})
+		prIDs = append(prIDs, ret.ID)
+	}
+
+	return prs, nil
+}

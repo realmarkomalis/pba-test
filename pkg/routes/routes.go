@@ -47,6 +47,13 @@ func InitializeRoutes(r *mux.Router, db *gorm.DB) {
 		HandleFunc("/", psh.GetPickupSlots).
 		Methods(http.MethodGet, http.MethodOptions)
 
+	pickupShedulesHandler := handlers.PickupShedulesHandler{DB: db}
+	pickupShedulesRouter := restAPIRouter.PathPrefix("/pickup-shedules").Subrouter()
+	pickupShedulesRouter.Use(middleware.AuthMiddleware)
+	pickupShedulesRouter.
+		HandleFunc("/", pickupShedulesHandler.GetPickupShedules).
+		Methods(http.MethodGet, http.MethodOptions)
+
 	userAddressRouter := restAPIRouter.PathPrefix("/user-addresses").Subrouter()
 	userAddressRouter.Use(middleware.AuthMiddleware)
 	uah := handlers.UserAddressesHandler{DB: db}
