@@ -30,7 +30,7 @@ func main() {
 	now := time.Now()
 	for i := 0; i < 3; i++ {
 		for _, s := range slots {
-			d := time.Date(now.Year(), now.Month(), now.Day(), s, 0, 0, 0, time.UTC)
+			d := time.Date(now.Year(), now.Month(), now.Day(), s, 0, 0, 0, now.Local().Location())
 			d = d.AddDate(0, 0, i)
 
 			fmt.Printf("start = %v\n", d)

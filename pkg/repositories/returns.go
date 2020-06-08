@@ -1,9 +1,6 @@
 package repositories
 
 import (
-	"errors"
-	"fmt"
-
 	"github.com/jinzhu/gorm"
 
 	"gitlab.com/markomalis/packback-api/pkg/entities"
@@ -11,10 +8,15 @@ import (
 )
 
 type IReturnRepository interface {
-	Create(userID, packageID uint) (*entities.Return, error)
-	CreatePackageDispatch(userID, packageID uint) (*entities.Return, error)
-	CreateReturnRequest(userID, packageID, slotID uint) (*entities.Return, error)
-	CreatePackagePickup(userID, packageID uint) (*entities.PackagePickup, error)
+	GetReturn(returnID uint) (*entities.Return, error)
+	GetReturns(packageID uint) ([]*entities.Return, error)
+	GetActiveReturns(packageID uint) ([]*entities.Return, error)
+
+	CreateReturn(packageID uint) (*entities.Return, error)
+	CreatePackageDispatch(returnID, userID uint) (*entities.Return, error)
+	CreateReturnRequest(returnID, userID, slotID uint) (*entities.Return, error)
+	CreatePackagePickup(ureturnID, userID uint) (*entities.Return, error)
+
 	GetPackageDispatches(userID uint) ([]*entities.Return, error)
 	GetPackagePickups(userID uint) ([]*entities.Return, error)
 	GetReturnRequests(userID uint) ([]*entities.Return, error)
@@ -24,62 +26,153 @@ type ReturnRepository struct {
 	DB *gorm.DB
 }
 
-func (r ReturnRepository) Create(userID, packageID uint) (*entities.Return, error) {
-	ret := models.Return{}
-	results := 0
+func (r ReturnRepository) GetReturn(returnID uint) (*entities.Return, error) {
+	rs := models.Return{}
+	err := r.DB.
+		Preload("Package").
+		Where("id = ?", returnID).
+		First(&rs).
+		Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &entities.Return{
+		ID:     rs.ID,
+		Status: rs.Status.String(),
+		Package: entities.Package{
+			ID:   rs.Package.ID,
+			Name: rs.Package.Name,
+		},
+		CreatedAt: rs.CreatedAt,
+	}, nil
+}
+
+func (r ReturnRepository) GetReturns(packageID uint) ([]*entities.Return, error) {
+	rs := []models.Return{}
+	err := r.DB.
+		Preload("Package").
+		Where("package_id = ?", packageID).
+		Find(&rs).
+		Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	rets := []*entities.Return{}
+	for _, ret := range rs {
+		rets = append(rets, &entities.Return{
+			ID:     ret.ID,
+			Status: ret.Status.String(),
+			Package: entities.Package{
+				ID:   ret.Package.ID,
+				Name: ret.Package.Name,
+			},
+			CreatedAt: ret.CreatedAt,
+		})
+	}
+
+	return rets, nil
+}
+
+func (r ReturnRepository) GetActiveReturns(packageID uint) ([]*entities.Return, error) {
+	rs := []models.Return{}
 	err := r.DB.
 		Where("package_id = ?", packageID).
 		Not(&models.Return{Status: models.Fulfilled}).
-		Find(&ret).
-		Count(&results).
+		Find(&rs).
 		Error
 
-	if results > 0 {
-		fmt.Printf("found %d number of results", results)
-		fmt.Println(err)
-		return nil, fmt.Errorf("Already active return for package with ID: %d", packageID)
+	if err != nil {
+		return nil, err
 	}
 
-	pack := models.Package{}
-	ret = models.Return{
-		Status:    models.Dispatched,
-		PackageID: packageID,
-		PackageDispatch: models.PackageDispatch{
-			UserID: userID,
-		},
+	rets := []*entities.Return{}
+	for _, ret := range rs {
+		rets = append(rets, &entities.Return{
+			ID:     ret.ID,
+			Status: ret.Status.String(),
+			Package: entities.Package{
+				ID:   ret.Package.ID,
+				Name: ret.Package.Name,
+			},
+			CreatedAt: ret.CreatedAt,
+		})
 	}
-	err = r.DB.Create(&ret).Related(&pack).Error
+
+	return rets, nil
+}
+
+func (r ReturnRepository) CreateReturn(packageID uint) (*entities.Return, error) {
+	pack := models.Package{}
+	ret := models.Return{
+		Status:    models.Created,
+		PackageID: packageID,
+	}
+	err := r.DB.Create(&ret).Related(&pack).Error
 	if err != nil {
 		return nil, err
 	}
 
 	return &entities.Return{
 		ID:     ret.ID,
-		Status: models.Dispatched.String(),
+		Status: ret.Status.String(),
 		Package: entities.Package{
 			ID:   pack.ID,
 			Name: pack.Name,
 		},
+		CreatedAt: ret.CreatedAt,
 	}, nil
 }
 
-func (r ReturnRepository) CreatePackageDispatch(userID, packageID uint) (*entities.Return, error) {
-	return nil, nil
-}
-
-func (r ReturnRepository) CreateReturnRequest(userID, packageID, slotID uint) (*entities.Return, error) {
+func (r ReturnRepository) CreatePackageDispatch(returnID, userID uint) (*entities.Return, error) {
 	ret := models.Return{}
 	err := r.DB.
 		Preload("Package").
-		Where("package_id = ? AND status = ?", packageID, models.Dispatched).
+		Where("id = ?", returnID).
 		First(&ret).
 		Error
+
 	if err != nil {
-		fmt.Printf("error getting package %d: %s", packageID, err)
 		return nil, err
 	}
-	if ret.Status != models.Dispatched {
-		return nil, errors.New("Couldn't find an dispatched return for this package")
+
+	err = r.DB.
+		Model(&ret).
+		Updates(models.Return{
+			Status: models.Dispatched,
+			PackageDispatch: models.PackageDispatch{
+				UserID: userID,
+			},
+		}).
+		Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &entities.Return{
+		ID:     ret.ID,
+		Status: ret.Status.String(),
+		Package: entities.Package{
+			ID:   ret.Package.ID,
+			Name: ret.Package.Name,
+		},
+		CreatedAt: ret.CreatedAt,
+	}, nil
+}
+
+func (r ReturnRepository) CreateReturnRequest(returnID, userID, slotID uint) (*entities.Return, error) {
+	ret := models.Return{}
+	err := r.DB.
+		Preload("Package").
+		Where("id = ?", returnID).
+		First(&ret).
+		Error
+
+	if err != nil {
+		return nil, err
 	}
 
 	slot := models.PickupSlot{}
@@ -118,83 +211,44 @@ func (r ReturnRepository) CreateReturnRequest(userID, packageID, slotID uint) (*
 			ID:   ret.Package.ID,
 			Name: ret.Package.Name,
 		},
+		CreatedAt: ret.CreatedAt,
 	}, nil
 }
 
-func (r ReturnRepository) CreatePackagePickup(userID, packageID uint) (*entities.PackagePickup, error) {
+func (r ReturnRepository) CreatePackagePickup(returnID, userID uint) (*entities.Return, error) {
 	ret := models.Return{}
 	err := r.DB.
 		Preload("Package").
-		Where("package_id = ? AND status = ?", packageID, models.Scheduled).
+		Where("id = ?", returnID).
 		First(&ret).
 		Error
+
 	if err != nil {
 		return nil, err
-	}
-	if ret.Status != models.Scheduled {
-		return nil, errors.New("Couldn't find an scheduled return for this package")
-	}
-
-	err = r.DB.Model(&ret).Updates(models.Return{
-		Status: models.Fulfilled,
-		PackagePickup: models.PackagePickup{
-			UserID: userID,
-		},
-	}).Error
-	if err != nil {
-		return nil, err
-	}
-
-	return &entities.PackagePickup{
-		ID: ret.PackagePickup.ID,
-		Return: entities.Return{
-			ID:     ret.ID,
-			Status: ret.Status.String(),
-			Package: entities.Package{
-				ID:   ret.Package.ID,
-				Name: ret.Package.Name,
-			},
-		},
-	}, nil
-}
-
-func (r ReturnRepository) GetPackagePickups(userID uint) ([]*entities.Return, error) {
-	rets := []models.Return{}
-	pickups := []models.PackagePickup{}
-
-	err := r.DB.Where("user_id = ?", userID).Find(&pickups).Error
-	if err != nil {
-		return nil, err
-	}
-
-	returnIDs := []uint{}
-	for _, p := range pickups {
-		returnIDs = append(returnIDs, p.ReturnID)
 	}
 
 	err = r.DB.
-		Preload("Package").
-		Where("id in (?)", returnIDs).
-		Find(&rets).
+		Model(&ret).
+		Updates(models.Return{
+			Status: models.Fulfilled,
+			PackagePickup: models.PackagePickup{
+				UserID: userID,
+			},
+		}).
 		Error
 	if err != nil {
 		return nil, err
 	}
 
-	returns := []*entities.Return{}
-	for _, ret := range rets {
-		returns = append(returns, &entities.Return{
-			ID:        ret.ID,
-			Status:    ret.Status.String(),
-			CreatedAt: ret.CreatedAt,
-			Package: entities.Package{
-				ID:   ret.Package.ID,
-				Name: ret.Package.Name,
-			},
-		})
-	}
-
-	return returns, nil
+	return &entities.Return{
+		ID:     ret.ID,
+		Status: ret.Status.String(),
+		Package: entities.Package{
+			ID:   ret.Package.ID,
+			Name: ret.Package.Name,
+		},
+		CreatedAt: ret.CreatedAt,
+	}, nil
 }
 
 func (r ReturnRepository) GetPackageDispatches(userID uint) ([]*entities.Return, error) {
@@ -254,6 +308,45 @@ func (r ReturnRepository) GetReturnRequests(userID uint) ([]*entities.Return, er
 	returnIDs := []uint{}
 	for _, d := range returnRequests {
 		returnIDs = append(returnIDs, d.ReturnID)
+	}
+
+	err = r.DB.
+		Preload("Package").
+		Where("id in (?)", returnIDs).
+		Find(&rets).
+		Error
+	if err != nil {
+		return nil, err
+	}
+
+	returns := []*entities.Return{}
+	for _, ret := range rets {
+		returns = append(returns, &entities.Return{
+			ID:        ret.ID,
+			Status:    ret.Status.String(),
+			CreatedAt: ret.CreatedAt,
+			Package: entities.Package{
+				ID:   ret.Package.ID,
+				Name: ret.Package.Name,
+			},
+		})
+	}
+
+	return returns, nil
+}
+
+func (r ReturnRepository) GetPackagePickups(userID uint) ([]*entities.Return, error) {
+	rets := []models.Return{}
+	pickups := []models.PackagePickup{}
+
+	err := r.DB.Where("user_id = ?", userID).Find(&pickups).Error
+	if err != nil {
+		return nil, err
+	}
+
+	returnIDs := []uint{}
+	for _, p := range pickups {
+		returnIDs = append(returnIDs, p.ReturnID)
 	}
 
 	err = r.DB.

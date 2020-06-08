@@ -2,12 +2,8 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
-	"strconv"
 
-	"github.com/asaskevich/govalidator"
-	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/markomalis/packback-api/pkg/entities"
 	"gitlab.com/markomalis/packback-api/pkg/repositories"
@@ -18,76 +14,139 @@ type ReturnsRequestsHandler struct {
 	DB *gorm.DB
 }
 
-type createReturnRequestBody struct {
-	PackageID uint `json:"package_id" valid:"type(uint)"`
+type createPackageDispatchRequestBody struct {
+	PackageIDs []uint `json:"package_ids"`
 }
 
 type createReturnRequestRequestBody struct {
-	SlotID uint `json:"slot_id" valid:"type(uint)"`
+	PackageIDs []uint `json:"package_ids"`
+	SlotID     uint   `json:"slot_id" valid:"type(uint)"`
 }
 
-type createPickupRequestBody struct {
+type createPackagePickupRequestBody struct {
+	PackageIDs []uint `json:"package_ids"`
+}
+
+type ErrorResponse struct {
+	Message string `json:"message"`
+	Code    string `json:"code"`
+}
+
+type returnsResponseBody struct {
+	Returns map[uint]*entities.Return `json:"returns"`
+	Errors  map[uint]ErrorResponse    `json:"errors"`
 }
 
 func (h ReturnsRequestsHandler) Create(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value("User").(*entities.User)
-	if user == nil {
-		http.Error(w, "No user found", http.StatusInternalServerError)
+	user := getUserFromRequestContext(r, w)
+
+	if user.UserRole.Name == "restaurant" {
+		h.CreatePackageDispatch(w, r)
 		return
 	}
 
+	if user.UserRole.Name == "customer" {
+		h.CreateReturnRequest(w, r)
+		return
+	}
+
+	if user.UserRole.Name == "rider" {
+		h.CreatePackagePickup(w, r)
+		return
+	}
+}
+
+func (h ReturnsRequestsHandler) CreatePackageDispatch(w http.ResponseWriter, r *http.Request) {
+	b := createPackageDispatchRequestBody{}
+	validateRequestBody(r, w, &b)
+
+	user := getUserFromRequestContext(r, w)
 	rr := repositories.ReturnRepository{h.DB}
 	u := usecases.ReturnsUsecase{rr}
 
-	body := createReturnRequestBody{}
-	err := json.NewDecoder(r.Body).Decode(&body)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	returns := make(map[uint]*entities.Return)
+	errors := make(map[uint]ErrorResponse)
+	for _, id := range b.PackageIDs {
+		ret, err := u.CreatePackageDispatch(user.ID, id)
+		if err != nil {
+			errors[id] = ErrorResponse{
+				Message: err.Error(),
+				Code:    err.Error(),
+			}
+		} else {
+			returns[id] = ret
+		}
 	}
 
-	result, err := govalidator.ValidateStruct(body)
-	if err != nil || !result {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	ret, err := u.CreateNewReturn(user.ID, body.PackageID)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	js, err := json.Marshal(ret)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(js)
-
+	writeSuccesResponse(
+		returnsResponseBody{
+			Returns: returns,
+			Errors:  errors,
+		},
+		w,
+	)
 }
 
 func (h ReturnsRequestsHandler) CreateReturnRequest(w http.ResponseWriter, r *http.Request) {
 	b := createReturnRequestRequestBody{}
 	validateRequestBody(r, w, &b)
 
-	vars := mux.Vars(r)
-	packageID, err := strconv.ParseUint(vars["package_id"], 10, 32)
-	if err != nil {
-		fmt.Println(err)
+	user := getUserFromRequestContext(r, w)
+	rr := repositories.ReturnRepository{h.DB}
+	u := usecases.ReturnsUsecase{rr}
+
+	returns := make(map[uint]*entities.Return)
+	errors := make(map[uint]ErrorResponse)
+	for _, id := range b.PackageIDs {
+		ret, err := u.CreateReturnRequest(user.ID, id, b.SlotID)
+		if err != nil {
+			errors[id] = ErrorResponse{
+				Message: err.Error(),
+				Code:    err.Error(),
+			}
+		} else {
+			returns[id] = ret
+		}
 	}
+
+	writeSuccesResponse(
+		returnsResponseBody{
+			Returns: returns,
+			Errors:  errors,
+		},
+		w,
+	)
+}
+
+func (h ReturnsRequestsHandler) CreatePackagePickup(w http.ResponseWriter, r *http.Request) {
+	b := createPackagePickupRequestBody{}
+	validateRequestBody(r, w, &b)
 
 	user := getUserFromRequestContext(r, w)
-	pr := repositories.ReturnRepository{h.DB}
-	ret, err := pr.CreateReturnRequest(user.ID, uint(packageID), b.SlotID)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+	rr := repositories.ReturnRepository{h.DB}
+	u := usecases.ReturnsUsecase{rr}
+
+	returns := make(map[uint]*entities.Return)
+	errors := make(map[uint]ErrorResponse)
+	for _, id := range b.PackageIDs {
+		ret, err := u.CreatePackagePickup(user.ID, id)
+		if err != nil {
+			errors[id] = ErrorResponse{
+				Message: err.Error(),
+				Code:    err.Error(),
+			}
+		} else {
+			returns[id] = ret
+		}
 	}
 
-	writeSuccesResponse(ret, w)
+	writeSuccesResponse(
+		returnsResponseBody{
+			Returns: returns,
+			Errors:  errors,
+		},
+		w,
+	)
 }
 
 func (h ReturnsRequestsHandler) GetReturns(w http.ResponseWriter, r *http.Request) {
@@ -102,39 +161,15 @@ func (h ReturnsRequestsHandler) GetReturns(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	if user.UserRole.Name == "rider" {
-		h.GetPackagePickups(w, r)
-		return
-	}
-
 	if user.UserRole.Name == "customer" {
 		h.GetReturnRequests(w, r)
 		return
 	}
-}
 
-func (h ReturnsRequestsHandler) GetPackagePickups(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value("User").(*entities.User)
-	if user == nil {
-		http.Error(w, "No user found", http.StatusInternalServerError)
+	if user.UserRole.Name == "rider" {
+		h.GetPackagePickups(w, r)
 		return
 	}
-
-	rr := repositories.ReturnRepository{h.DB}
-	returns, err := rr.GetPackagePickups(user.ID)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	js, err := json.Marshal(returns)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(js)
 }
 
 func (h ReturnsRequestsHandler) GetPackageDispatches(w http.ResponseWriter, r *http.Request) {
@@ -185,28 +220,21 @@ func (h ReturnsRequestsHandler) GetReturnRequests(w http.ResponseWriter, r *http
 	w.Write(js)
 }
 
-func (h ReturnsRequestsHandler) CreatePackagePickup(w http.ResponseWriter, r *http.Request) {
+func (h ReturnsRequestsHandler) GetPackagePickups(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("User").(*entities.User)
 	if user == nil {
 		http.Error(w, "No user found", http.StatusInternalServerError)
 		return
 	}
 
-	vars := mux.Vars(r)
-	packageID, err := strconv.ParseUint(vars["package_id"], 10, 32)
-	if err != nil {
-		fmt.Println(err)
-	}
 	rr := repositories.ReturnRepository{h.DB}
-	u := usecases.ReturnsUsecase{rr}
-
-	ret, err := u.CreatePackagePickup(user.ID, uint(packageID))
+	returns, err := rr.GetPackagePickups(user.ID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	js, err := json.Marshal(ret)
+	js, err := json.Marshal(returns)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

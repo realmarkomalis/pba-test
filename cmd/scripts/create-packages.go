@@ -25,7 +25,7 @@ func main() {
 	}
 	defer db.Close()
 
-	for i := 0; i < 1000; i++ {
+	for i := 1000; i < 5000; i++ {
 		createPackage(db, i)
 	}
 }
