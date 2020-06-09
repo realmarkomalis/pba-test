@@ -18,7 +18,7 @@ func (r PickupSlotsRepository) GetPickupSlots() ([]*entities.PickupSlot, error) 
 	err := r.DB.
 		Order("start_date_time asc").
 		Where("start_date_time > ?", time.Now()).
-		Where("booked = ?", false).
+		// Where("booked = ?", false).
 		Find(&ps).
 		Error
 
@@ -32,6 +32,7 @@ func (r PickupSlotsRepository) GetPickupSlots() ([]*entities.PickupSlot, error) 
 			ID:            p.ID,
 			StartDateTime: p.StartDateTime,
 			EndDateTime:   p.EndDateTime,
+			Booked:        p.Booked,
 		})
 	}
 

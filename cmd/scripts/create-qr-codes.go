@@ -8,7 +8,7 @@ import (
 
 func main() {
 	q := services.QRCodeService{}
-	for i := 1; i <= 600; i++ {
+	for i := 1; i <= 500; i++ {
 		_ = q.WriteCode(
 			fmt.Sprintf("packback.app/?packback_id=%d", i),
 			fmt.Sprintf("qr-codes/test-%d.png", i),
