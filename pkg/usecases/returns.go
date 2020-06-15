@@ -40,6 +40,10 @@ func (u ReturnsUsecase) CreatePackageDispatches(userID uint, packageIDs []uint) 
 		}
 	}
 
+	if len(rets) == 0 {
+		return rets, nil
+	}
+
 	_, err := u.UserReturnRepo.CreateUserReturnEntry(userID, returnIDs)
 	if err != nil {
 		return nil, err
@@ -89,6 +93,10 @@ func (u ReturnsUsecase) CreateReturnRequests(userID, slotID uint, packageIDs []u
 			rets = append(rets, ret)
 			returnIDs = append(returnIDs, ret.ID)
 		}
+	}
+
+	if len(rets) == 0 {
+		return rets, nil
 	}
 
 	_, err = u.PickupSlotsRepo.BookPickupSlot(slot.ID)
@@ -145,6 +153,10 @@ func (u ReturnsUsecase) CreatePackagePickups(userID uint, packageIDs []uint) ([]
 			rets = append(rets, ret)
 			returnIDs = append(returnIDs, ret.ID)
 		}
+	}
+
+	if len(rets) == 0 {
+		return rets, nil
 	}
 
 	_, err := u.UserReturnRepo.CreateUserReturnEntry(userID, returnIDs)
