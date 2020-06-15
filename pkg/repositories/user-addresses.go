@@ -42,5 +42,37 @@ func (r UserAddressesRepository) CreateUserAddress(user *entities.User, address 
 }
 
 func (r UserAddressesRepository) UpdateUserAddress(user *entities.User, address *entities.UserAddress) (*entities.UserAddress, error) {
-	return nil, nil
+	a := models.UserAddress{}
+	err := r.DB.
+		FirstOrCreate(&a, models.UserAddress{
+			UserID: user.ID,
+		}).
+		Error
+	if err != nil {
+		return nil, err
+	}
+
+	a.PostalCode = address.PostalCode
+	a.StreetName = address.StreetName
+	a.HouseNumber = address.HouseNumber
+	a.HouseNumberSuffix = address.HouseNumberSuffix
+	a.City = address.City
+	a.Country = address.Country
+
+	err = r.DB.
+		Save(&a).
+		Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &entities.UserAddress{
+		ID:                a.ID,
+		PostalCode:        a.PostalCode,
+		StreetName:        a.StreetName,
+		HouseNumber:       a.HouseNumber,
+		HouseNumberSuffix: a.HouseNumberSuffix,
+		City:              a.City,
+		Country:           a.Country,
+	}, nil
 }

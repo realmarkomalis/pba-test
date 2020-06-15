@@ -8,32 +8,44 @@ import (
 )
 
 type IReturnsUsecase interface {
-	CreateNewReturn(userID, packageID uint) (*entities.Return, error)
 	CreatePackageDispatch(userID, packageID uint) (*entities.Return, error)
-	CreateReturnRequest(userID, packageID uint) (*entities.Return, error)
+	CreatePackageDispatches(userID uint, packageIDs []uint) ([]*entities.Return, error)
+
+	CreateReturnRequest(userID, packageID, slotID uint) (*entities.Return, error)
+	CreateReturnRequests(userID, slotID uint, packageIDs []uint) ([]*entities.Return, error)
+
 	CreatePackagePickup(userID, packageID uint) (*entities.PackagePickup, error)
+	CreatePackagePickups(userID uint, packageIDs []uint) ([]*entities.Return, error)
+
+	GetUserReturns(userID uint) ([]*entities.UserReturnEntry, error)
+	GetUserReturnEntries(userID uint) ([]*entities.UserReturnEntry, error)
 }
 
 type ReturnsUsecase struct {
-	ReturnsRepo repositories.IReturnRepository
+	ReturnsRepo     repositories.IReturnRepository
+	UserReturnRepo  repositories.IUserReturnRepository
+	PickupSlotsRepo repositories.PickupSlotsRepository
 }
 
-func (u ReturnsUsecase) CreateNewReturn(user *entities.User, packageID uint) (*entities.Return, error) {
-	// var ret *entities.Return
-	// var err error
-	// if user.UserRole.SystemID == "restaurant" {
-	// 	ret, err = u.CreatePackageDispatch(user.ID, packageID)
-	// } else if user.UserRole.SystemID == "customer" {
-	// 	ret, err = u.CreateReturnRequest(user.ID, packageID)
-	// } else if user.UserRole.SystemID == "rider" {
-	// 	ret, err = u.CreatePackagePickup(user.ID, packageID)
-	// }
+type Bla map[string]interface{}
 
-	// if err != nil {
-	// 	return nil, err
-	// }
+func (u ReturnsUsecase) CreatePackageDispatches(userID uint, packageIDs []uint) ([]*entities.Return, error) {
+	rets := []*entities.Return{}
+	returnIDs := []uint{}
+	for _, id := range packageIDs {
+		ret, err := u.CreatePackageDispatch(userID, id)
+		if err == nil {
+			rets = append(rets, ret)
+			returnIDs = append(returnIDs, ret.ID)
+		}
+	}
 
-	return nil, nil
+	_, err := u.UserReturnRepo.CreateUserReturnEntry(userID, returnIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	return rets, nil
 }
 
 func (u ReturnsUsecase) CreatePackageDispatch(userID, packageID uint) (*entities.Return, error) {
@@ -57,6 +69,39 @@ func (u ReturnsUsecase) CreatePackageDispatch(userID, packageID uint) (*entities
 	}
 
 	return ret, nil
+}
+
+func (u ReturnsUsecase) CreateReturnRequests(userID, slotID uint, packageIDs []uint) ([]*entities.Return, error) {
+	slot, err := u.PickupSlotsRepo.GetPickupSlot(slotID)
+	if err != nil {
+		return nil, err
+	}
+
+	if slot.Booked {
+		return nil, errors.New("Provided slot is already booked")
+	}
+
+	rets := []*entities.Return{}
+	returnIDs := []uint{}
+	for _, id := range packageIDs {
+		ret, err := u.CreateReturnRequest(userID, id, slot.ID)
+		if err == nil {
+			rets = append(rets, ret)
+			returnIDs = append(returnIDs, ret.ID)
+		}
+	}
+
+	_, err = u.PickupSlotsRepo.BookPickupSlot(slot.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = u.UserReturnRepo.CreateUserReturnEntry(userID, returnIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	return rets, nil
 }
 
 func (u ReturnsUsecase) CreateReturnRequest(userID, packageID, slotID uint) (*entities.Return, error) {
@@ -91,6 +136,25 @@ func (u ReturnsUsecase) CreateReturnRequest(userID, packageID, slotID uint) (*en
 	return ret, nil
 }
 
+func (u ReturnsUsecase) CreatePackagePickups(userID uint, packageIDs []uint) ([]*entities.Return, error) {
+	rets := []*entities.Return{}
+	returnIDs := []uint{}
+	for _, id := range packageIDs {
+		ret, err := u.CreatePackagePickup(userID, id)
+		if err == nil {
+			rets = append(rets, ret)
+			returnIDs = append(returnIDs, ret.ID)
+		}
+	}
+
+	_, err := u.UserReturnRepo.CreateUserReturnEntry(userID, returnIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	return rets, nil
+}
+
 func (u ReturnsUsecase) CreatePackagePickup(userID, packageID uint) (*entities.Return, error) {
 	rets, err := u.ReturnsRepo.GetActiveReturns(packageID)
 	if err != nil {
@@ -119,4 +183,12 @@ func (u ReturnsUsecase) CreatePackagePickup(userID, packageID uint) (*entities.R
 	}
 
 	return nil, errors.New("Unexpected; No conditions met")
+}
+
+func (u ReturnsUsecase) GetUserReturns(userID uint) ([]*entities.UserReturnEntry, error) {
+	return u.GetUserReturnEntries(userID)
+}
+
+func (u ReturnsUsecase) GetUserReturnEntries(userID uint) ([]*entities.UserReturnEntry, error) {
+	return u.UserReturnRepo.GetUserReturnEntries(userID)
 }

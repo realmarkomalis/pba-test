@@ -15,26 +15,21 @@ type ReturnsRequestsHandler struct {
 }
 
 type createPackageDispatchRequestBody struct {
-	PackageIDs []uint `json:"package_ids"`
+	PackageIDs []uint `json:"package_ids" valid:"required"`
 }
 
 type createReturnRequestRequestBody struct {
-	PackageIDs []uint `json:"package_ids"`
+	PackageIDs []uint `json:"package_ids" valid:"required"`
 	SlotID     uint   `json:"slot_id" valid:"type(uint)"`
 }
 
 type createPackagePickupRequestBody struct {
-	PackageIDs []uint `json:"package_ids"`
-}
-
-type ErrorResponse struct {
-	Message string `json:"message"`
-	Code    string `json:"code"`
+	PackageIDs []uint `json:"package_ids" valid:"required"`
 }
 
 type returnsResponseBody struct {
-	Returns map[uint]*entities.Return `json:"returns"`
-	Errors  map[uint]ErrorResponse    `json:"errors"`
+	Returns []*entities.Return     `json:"returns"`
+	Errors  map[uint]ErrorResponse `json:"errors"`
 }
 
 func (h ReturnsRequestsHandler) Create(w http.ResponseWriter, r *http.Request) {
@@ -58,126 +53,96 @@ func (h ReturnsRequestsHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 func (h ReturnsRequestsHandler) CreatePackageDispatch(w http.ResponseWriter, r *http.Request) {
 	b := createPackageDispatchRequestBody{}
-	validateRequestBody(r, w, &b)
-
-	user := getUserFromRequestContext(r, w)
-	rr := repositories.ReturnRepository{h.DB}
-	u := usecases.ReturnsUsecase{rr}
-
-	returns := make(map[uint]*entities.Return)
-	errors := make(map[uint]ErrorResponse)
-	for _, id := range b.PackageIDs {
-		ret, err := u.CreatePackageDispatch(user.ID, id)
-		if err != nil {
-			errors[id] = ErrorResponse{
-				Message: err.Error(),
-				Code:    err.Error(),
-			}
-		} else {
-			returns[id] = ret
-		}
+	if !validateRequestBody(r, w, &b) {
+		return
 	}
 
-	writeSuccesResponse(
-		returnsResponseBody{
-			Returns: returns,
-			Errors:  errors,
-		},
-		w,
-	)
+	user := getUserFromRequestContext(r, w)
+	rr := repositories.ReturnRepository{DB: h.DB}
+	urr := repositories.UserReturnRepository{DB: h.DB}
+	pr := repositories.PickupSlotsRepository{DB: h.DB}
+	u := usecases.ReturnsUsecase{
+		ReturnsRepo:     rr,
+		UserReturnRepo:  urr,
+		PickupSlotsRepo: pr,
+	}
+
+	returns, err := u.CreatePackageDispatches(user.ID, b.PackageIDs)
+	if err != nil {
+		return
+	}
+
+	writeSuccesResponse(returnsResponseBody{Returns: returns}, w)
 }
 
 func (h ReturnsRequestsHandler) CreateReturnRequest(w http.ResponseWriter, r *http.Request) {
 	b := createReturnRequestRequestBody{}
-	validateRequestBody(r, w, &b)
-
-	user := getUserFromRequestContext(r, w)
-	rr := repositories.ReturnRepository{h.DB}
-	u := usecases.ReturnsUsecase{rr}
-
-	returns := make(map[uint]*entities.Return)
-	errors := make(map[uint]ErrorResponse)
-	for _, id := range b.PackageIDs {
-		ret, err := u.CreateReturnRequest(user.ID, id, b.SlotID)
-		if err != nil {
-			errors[id] = ErrorResponse{
-				Message: err.Error(),
-				Code:    err.Error(),
-			}
-		} else {
-			returns[id] = ret
-		}
+	if !validateRequestBody(r, w, &b) {
+		return
 	}
 
-	writeSuccesResponse(
-		returnsResponseBody{
-			Returns: returns,
-			Errors:  errors,
-		},
-		w,
-	)
+	user := getUserFromRequestContext(r, w)
+	rr := repositories.ReturnRepository{DB: h.DB}
+	urr := repositories.UserReturnRepository{DB: h.DB}
+	pr := repositories.PickupSlotsRepository{DB: h.DB}
+	u := usecases.ReturnsUsecase{
+		ReturnsRepo:     rr,
+		UserReturnRepo:  urr,
+		PickupSlotsRepo: pr,
+	}
+
+	returns, err := u.CreateReturnRequests(user.ID, b.SlotID, b.PackageIDs)
+	if err != nil {
+		return
+	}
+
+	writeSuccesResponse(returnsResponseBody{Returns: returns}, w)
 }
 
 func (h ReturnsRequestsHandler) CreatePackagePickup(w http.ResponseWriter, r *http.Request) {
 	b := createPackagePickupRequestBody{}
-	validateRequestBody(r, w, &b)
-
-	user := getUserFromRequestContext(r, w)
-	rr := repositories.ReturnRepository{h.DB}
-	u := usecases.ReturnsUsecase{rr}
-
-	returns := make(map[uint]*entities.Return)
-	errors := make(map[uint]ErrorResponse)
-	for _, id := range b.PackageIDs {
-		ret, err := u.CreatePackagePickup(user.ID, id)
-		if err != nil {
-			errors[id] = ErrorResponse{
-				Message: err.Error(),
-				Code:    err.Error(),
-			}
-		} else {
-			returns[id] = ret
-		}
+	if !validateRequestBody(r, w, &b) {
+		return
 	}
 
-	writeSuccesResponse(
-		returnsResponseBody{
-			Returns: returns,
-			Errors:  errors,
-		},
-		w,
-	)
+	user := getUserFromRequestContext(r, w)
+	rr := repositories.ReturnRepository{DB: h.DB}
+	urr := repositories.UserReturnRepository{DB: h.DB}
+	pr := repositories.PickupSlotsRepository{DB: h.DB}
+	u := usecases.ReturnsUsecase{
+		ReturnsRepo:     rr,
+		UserReturnRepo:  urr,
+		PickupSlotsRepo: pr,
+	}
+
+	returns, err := u.CreatePackagePickups(user.ID, b.PackageIDs)
+	if err != nil {
+		return
+	}
+
+	writeSuccesResponse(returnsResponseBody{Returns: returns}, w)
 }
 
 func (h ReturnsRequestsHandler) GetReturns(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value("User").(*entities.User)
-	if user == nil {
-		http.Error(w, "No user found", http.StatusInternalServerError)
-		return
+	user := getUserFromRequestContext(r, w)
+	rr := repositories.ReturnRepository{DB: h.DB}
+	urr := repositories.UserReturnRepository{DB: h.DB}
+	pr := repositories.PickupSlotsRepository{DB: h.DB}
+	u := usecases.ReturnsUsecase{
+		ReturnsRepo:     rr,
+		UserReturnRepo:  urr,
+		PickupSlotsRepo: pr,
+	}
+	rets, err := u.GetUserReturns(user.ID)
+	if err != nil {
+
 	}
 
-	if user.UserRole.Name == "restaurant" {
-		h.GetPackageDispatches(w, r)
-		return
-	}
-
-	if user.UserRole.Name == "customer" {
-		h.GetReturnRequests(w, r)
-		return
-	}
-
-	if user.UserRole.Name == "rider" {
-		h.GetPackagePickups(w, r)
-		return
-	}
+	writeSuccesResponse(rets, w)
 }
 
 func (h ReturnsRequestsHandler) GetPackageDispatches(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value("User").(*entities.User)
-	if user == nil {
-		http.Error(w, "No user found", http.StatusInternalServerError)
-		return
-	}
+	user := getUserFromRequestContext(r, w)
 
 	rr := repositories.ReturnRepository{h.DB}
 	returns, err := rr.GetPackageDispatches(user.ID)
@@ -197,11 +162,7 @@ func (h ReturnsRequestsHandler) GetPackageDispatches(w http.ResponseWriter, r *h
 }
 
 func (h ReturnsRequestsHandler) GetReturnRequests(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value("User").(*entities.User)
-	if user == nil {
-		http.Error(w, "No user found", http.StatusInternalServerError)
-		return
-	}
+	user := getUserFromRequestContext(r, w)
 
 	rr := repositories.ReturnRepository{h.DB}
 	returns, err := rr.GetReturnRequests(user.ID)
@@ -221,11 +182,7 @@ func (h ReturnsRequestsHandler) GetReturnRequests(w http.ResponseWriter, r *http
 }
 
 func (h ReturnsRequestsHandler) GetPackagePickups(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value("User").(*entities.User)
-	if user == nil {
-		http.Error(w, "No user found", http.StatusInternalServerError)
-		return
-	}
+	user := getUserFromRequestContext(r, w)
 
 	rr := repositories.ReturnRepository{h.DB}
 	returns, err := rr.GetPackagePickups(user.ID)

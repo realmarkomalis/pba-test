@@ -39,6 +39,8 @@ func main() {
 		&models.UserRole{},
 		&models.Package{},
 		&models.Return{},
+		&models.UserReturnEntry{},
+		&models.UserReturnEntryReturns{},
 		&models.PackageDispatch{},
 		&models.PackagePickup{},
 		&models.ReturnRequest{},
@@ -46,15 +48,24 @@ func main() {
 	)
 
 	db.Model(&models.User{}).AddForeignKey("user_role_id", "user_roles(id)", "RESTRICT", "RESTRICT")
+
 	db.Model(&models.UserAddress{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
+
 	db.Model(&models.Return{}).AddForeignKey("package_id", "packages(id)", "RESTRICT", "RESTRICT")
+
 	db.Model(&models.PackageDispatch{}).AddForeignKey("return_id", "returns(id)", "RESTRICT", "RESTRICT")
 	db.Model(&models.PackageDispatch{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
+
 	db.Model(&models.ReturnRequest{}).AddForeignKey("return_id", "returns(id)", "RESTRICT", "RESTRICT")
-	db.Model(&models.ReturnRequest{}).AddForeignKey("pickup_slot_id", "pickup_slots(id)", "RESTRICT", "RESTRICT")
 	db.Model(&models.ReturnRequest{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.ReturnRequest{}).AddForeignKey("pickup_slot_id", "pickup_slots(id)", "RESTRICT", "RESTRICT")
+
 	db.Model(&models.PackagePickup{}).AddForeignKey("return_id", "returns(id)", "RESTRICT", "RESTRICT")
 	db.Model(&models.PackagePickup{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
+
+	db.Model(&models.UserReturnEntry{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.UserReturnEntryReturns{}).AddForeignKey("user_return_entry_id", "user_return_entries(id)", "CASCADE", "CASCADE")
+	db.Model(&models.UserReturnEntryReturns{}).AddForeignKey("return_id", "returns(id)", "CASCADE", "CASCADE")
 
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"http://127.0.0.1:8080", "https://packback.netlify.app", "https://packback.app", "https://develop.packback.app"},

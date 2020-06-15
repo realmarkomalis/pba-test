@@ -24,12 +24,14 @@ type createAddressBody struct {
 
 func (h UserAddressesHandler) CreateUserAddress(w http.ResponseWriter, r *http.Request) {
 	user := getUserFromRequestContext(r, w)
-	pr := repositories.UserAddressesRepository{DB: h.DB}
 
 	a := createAddressBody{}
-	validateRequestBody(r, w, &a)
+	if !validateRequestBody(r, w, &a) {
+		return
+	}
 
-	slots, err := pr.CreateUserAddress(user, &entities.UserAddress{
+	pr := repositories.UserAddressesRepository{DB: h.DB}
+	addr, err := pr.UpdateUserAddress(user, &entities.UserAddress{
 		PostalCode:        a.PostalCode,
 		StreetName:        a.StreetName,
 		HouseNumber:       a.HouseNumber,
@@ -38,21 +40,76 @@ func (h UserAddressesHandler) CreateUserAddress(w http.ResponseWriter, r *http.R
 		Country:           "NL",
 	})
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		writeErrorResponse([]ResponseError{
+			{
+				Message: err.Error(),
+				Code:    "0",
+			},
+		}, http.StatusBadRequest, w)
 		return
 	}
 
-	writeSuccesResponse(slots, w)
+	ur := repositories.UserRepository{DB: h.DB}
+	_, err = ur.UpdateUser(&entities.User{
+		ID:        user.ID,
+		FirstName: a.FirstName,
+		LastName:  a.LastName,
+	})
+	if err != nil {
+		writeErrorResponse([]ResponseError{
+			{
+				Message: err.Error(),
+				Code:    "0",
+			},
+		}, http.StatusBadRequest, w)
+		return
+	}
+
+	writeSuccesResponse(addr, w)
 }
 
 func (h UserAddressesHandler) UpdateUserAddress(w http.ResponseWriter, r *http.Request) {
-	pr := repositories.PickupSlotsRepository{DB: h.DB}
+	user := getUserFromRequestContext(r, w)
 
-	slots, err := pr.GetPickupSlots()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	a := createAddressBody{}
+	if !validateRequestBody(r, w, &a) {
 		return
 	}
 
-	writeSuccesResponse(slots, w)
+	pr := repositories.UserAddressesRepository{DB: h.DB}
+	addr, err := pr.UpdateUserAddress(user, &entities.UserAddress{
+		PostalCode:        a.PostalCode,
+		StreetName:        a.StreetName,
+		HouseNumber:       a.HouseNumber,
+		HouseNumberSuffix: a.HouseNumberSuffix,
+		City:              a.City,
+		Country:           "NL",
+	})
+	if err != nil {
+		writeErrorResponse([]ResponseError{
+			{
+				Message: err.Error(),
+				Code:    "0",
+			},
+		}, http.StatusBadRequest, w)
+		return
+	}
+
+	ur := repositories.UserRepository{DB: h.DB}
+	_, err = ur.UpdateUser(&entities.User{
+		ID:        user.ID,
+		FirstName: a.FirstName,
+		LastName:  a.LastName,
+	})
+	if err != nil {
+		writeErrorResponse([]ResponseError{
+			{
+				Message: err.Error(),
+				Code:    "0",
+			},
+		}, http.StatusBadRequest, w)
+		return
+	}
+
+	writeSuccesResponse(addr, w)
 }

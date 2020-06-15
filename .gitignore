@@ -1,3 +1,4 @@
 config.yaml
 qr-codes/
 *.zip
+*.DS_Store

@@ -44,8 +44,10 @@ func (ur UserRepository) GetByEmail(email string) (*entities.User, error) {
 	}
 
 	return &entities.User{
-		ID:    user.ID,
-		Email: user.Email,
+		ID:        user.ID,
+		Email:     user.Email,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
 		UserRole: entities.UserRole{
 			Name:     role.Name,
 			SystemID: role.SystemID,
@@ -76,4 +78,31 @@ func (ur UserRepository) Create(user *entities.User) (*entities.User, error) {
 			SystemID: u.Role.SystemID,
 		},
 	}, nil
+}
+
+func (ur UserRepository) UpdateUser(u *entities.User) (*entities.User, error) {
+	user := models.User{}
+	err := ur.DB.Model(&user).
+		Where("id = ?", u.ID).
+		Updates(models.User{
+			FirstName: u.FirstName,
+			LastName:  u.LastName,
+			Email:     u.Email,
+		}).
+		Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &entities.User{
+		ID:        user.ID,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Email:     user.Email,
+		UserRole: entities.UserRole{
+			Name:     user.Role.Name,
+			SystemID: user.Role.SystemID,
+		},
+	}, nil
+
 }

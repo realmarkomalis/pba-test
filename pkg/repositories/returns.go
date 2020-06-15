@@ -15,7 +15,7 @@ type IReturnRepository interface {
 	CreateReturn(packageID uint) (*entities.Return, error)
 	CreatePackageDispatch(returnID, userID uint) (*entities.Return, error)
 	CreateReturnRequest(returnID, userID, slotID uint) (*entities.Return, error)
-	CreatePackagePickup(ureturnID, userID uint) (*entities.Return, error)
+	CreatePackagePickup(returnID, userID uint) (*entities.Return, error)
 
 	GetPackageDispatches(userID uint) ([]*entities.Return, error)
 	GetPackagePickups(userID uint) ([]*entities.Return, error)
@@ -175,29 +175,12 @@ func (r ReturnRepository) CreateReturnRequest(returnID, userID, slotID uint) (*e
 		return nil, err
 	}
 
-	slot := models.PickupSlot{}
-	err = r.DB.
-		Where("id = ?", slotID).
-		First(&slot).
-		Error
-	if err != nil {
-		return nil, err
-	}
-
-	err = r.DB.Model(&slot).Updates(models.PickupSlot{
-		UserID: userID,
-		Booked: true,
-	}).Error
-	if err != nil {
-		return nil, err
-	}
-
 	err = r.DB.Model(&ret).Updates(models.Return{
 		Status: models.Scheduled,
 		ReturnRequest: models.ReturnRequest{
 			UserID:       userID,
 			ReturnID:     ret.ID,
-			PickupSlotID: slot.ID,
+			PickupSlotID: slotID,
 		},
 	}).Error
 	if err != nil {
@@ -413,11 +396,6 @@ func (r ReturnRepository) GetAllReturnRequests() ([]entities.PickupRequest, erro
 				UserAddresses: []entities.UserAddress{
 					address,
 				},
-			},
-			PickupSlot: entities.PickupSlot{
-				ID:            ret.PickupSlot.ID,
-				StartDateTime: ret.PickupSlot.StartDateTime,
-				EndDateTime:   ret.PickupSlot.EndDateTime,
 			},
 		})
 		prIDs = append(prIDs, ret.ID)

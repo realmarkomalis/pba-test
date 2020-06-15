@@ -3,6 +3,8 @@ package entities
 type User struct {
 	ID            uint          `json:"id"`
 	Email         string        `json:"email"`
+	FirstName     string        `json:"first_name"`
+	LastName      string        `json:"last_name"`
 	UserAddresses []UserAddress `json:"user_addresses"`
 	UserRole      UserRole      `json:"user_role"`
 	Token         string        `json:"token"`

@@ -29,6 +29,19 @@ type Return struct {
 	PackagePickup   PackagePickup
 }
 
+type UserReturnEntry struct {
+	gorm.Model
+	User    User
+	UserID  uint
+	Returns []Return `gorm:"many2many:user_return_entry_returns"`
+}
+
+type UserReturnEntryReturns struct {
+	gorm.Model
+	UserReturnEntryID uint
+	ReturnID          uint
+}
+
 type PackageDispatch struct {
 	gorm.Model
 	User     User
@@ -40,9 +53,9 @@ type ReturnRequest struct {
 	gorm.Model
 	User         User
 	UserID       uint
+	ReturnID     uint
 	PickupSlot   PickupSlot
 	PickupSlotID uint
-	ReturnID     uint
 }
 
 type PackagePickup struct {

@@ -13,6 +13,25 @@ type PickupSlotsRepository struct {
 	DB *gorm.DB
 }
 
+func (r PickupSlotsRepository) GetPickupSlot(slotID uint) (*entities.PickupSlot, error) {
+	p := models.PickupSlot{}
+	err := r.DB.
+		Where("id = ?", slotID).
+		First(&p).
+		Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &entities.PickupSlot{
+		ID:            p.ID,
+		StartDateTime: p.StartDateTime,
+		EndDateTime:   p.EndDateTime,
+		Booked:        p.Booked,
+	}, nil
+}
+
 func (r PickupSlotsRepository) GetPickupSlots() ([]*entities.PickupSlot, error) {
 	ps := []models.PickupSlot{}
 	err := r.DB.
@@ -37,4 +56,23 @@ func (r PickupSlotsRepository) GetPickupSlots() ([]*entities.PickupSlot, error) 
 	}
 
 	return slots, nil
+}
+
+func (r PickupSlotsRepository) BookPickupSlot(slotID uint) (*entities.PickupSlot, error) {
+	p := models.PickupSlot{}
+	err := r.DB.
+		Model(&p).
+		Where("id = ?", slotID).
+		Update("booked", "true").
+		Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &entities.PickupSlot{
+		ID:            p.ID,
+		StartDateTime: p.StartDateTime,
+		EndDateTime:   p.EndDateTime,
+		Booked:        p.Booked,
+	}, nil
 }
