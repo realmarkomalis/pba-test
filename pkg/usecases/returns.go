@@ -186,7 +186,7 @@ func (u ReturnsUsecase) CreatePackagePickup(userID, packageID uint) (*entities.R
 	}
 
 	if len(rets) == 1 && rets[0].Status == "Scheduled" {
-		ret, err := u.ReturnsRepo.CreatePackageDispatch(rets[0].ID, userID)
+		ret, err := u.ReturnsRepo.CreatePackagePickup(rets[0].ID, userID)
 		if err != nil {
 			return nil, err
 		}

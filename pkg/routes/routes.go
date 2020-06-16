@@ -67,4 +67,11 @@ func InitializeRoutes(r *mux.Router, db *gorm.DB) {
 	userAddressRouter.
 		HandleFunc("/", uah.UpdateUserAddress).
 		Methods(http.MethodPut, http.MethodOptions)
+
+	userChipsRouter := restAPIRouter.PathPrefix("/chips").Subrouter()
+	userChipsRouter.Use(middleware.AuthMiddleware)
+	uch := handlers.UserChipsHandler{DB: db}
+	userChipsRouter.
+		HandleFunc("/", uch.GetUserChips).
+		Methods(http.MethodGet, http.MethodOptions)
 }
