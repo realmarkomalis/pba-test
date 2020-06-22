@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 
 	"gitlab.com/markomalis/packback-api/pkg/entities"
@@ -19,6 +20,11 @@ type PasswordlessAuth struct {
 }
 
 type loginResponse struct {
+	AccesToken string `json:"access_token"`
+	IDToken    string `json:"id_token"`
+}
+
+type userInfoResponse struct {
 	Sub           string `json:"sub"`
 	Email         string `json:"email"`
 	EmailVerified bool   `json:"email_verified"`
@@ -29,7 +35,48 @@ type errorResponse struct {
 	ErrorDescription string `json:"error_description"`
 }
 
-func (p PasswordlessAuth) Login(username, code string) (*entities.User, error) {
+func (p PasswordlessAuth) Login(username, code string) (string, error) {
+	url := fmt.Sprintf("https://%s/oauth/token", p.Domain)
+	requestBody, err := json.Marshal(map[string]interface{}{
+		"client_id":     p.ClientID,
+		"client_secret": p.ClientSecret,
+		"username":      username,
+		"otp":           code,
+		"grant_type":    "http://auth0.com/oauth/grant-type/passwordless/otp",
+		"realm":         "email",
+		"scope":         "openid profile email",
+	})
+	if err != nil {
+		return "", err
+	}
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(requestBody))
+	if err != nil {
+		return "", err
+	}
+
+	req.Header.Add("content-type", "application/json")
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 300 {
+		fmt.Printf("errrrr 1 %d", resp.StatusCode)
+		return "", errors.New("Error logining in user")
+	}
+
+	body := loginResponse{}
+	err = json.NewDecoder(resp.Body).Decode(&body)
+	if err != nil {
+		fmt.Printf("errrrr 2: %s", err)
+		return "", err
+	}
+
+	return body.AccesToken, nil
+}
+
+func (p PasswordlessAuth) UserInfo(token string) (*entities.User, error) {
 	url := fmt.Sprintf("https://%s/userinfo", p.Domain)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -37,7 +84,7 @@ func (p PasswordlessAuth) Login(username, code string) (*entities.User, error) {
 	}
 
 	req.Header.Add("content-type", "application/json")
-	req.Header.Add("authorization", fmt.Sprintf("Bearer %s", code))
+	req.Header.Add("authorization", fmt.Sprintf("Bearer %s", token))
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
@@ -49,7 +96,7 @@ func (p PasswordlessAuth) Login(username, code string) (*entities.User, error) {
 		return nil, errors.New("Error logining in user")
 	}
 
-	body := loginResponse{}
+	body := userInfoResponse{}
 	err = json.NewDecoder(resp.Body).Decode(&body)
 	if err != nil {
 		return nil, err
@@ -70,7 +117,7 @@ func (p PasswordlessAuth) RequestLogin(username string) error {
 		"client_id":     p.ClientID,
 		"client_secret": p.ClientSecret,
 		"connection":    "email",
-		"send":          "link",
+		"send":          "code",
 		"authParams": map[string]interface{}{
 			"scope":        "openid profile email",
 			"redirect_uri": p.RedirectURL,
@@ -102,13 +149,11 @@ func (p PasswordlessAuth) RequestLogin(username string) error {
 	return nil
 }
 
-func decodeErrorResponse(b io.ReadCloser) errorResponse {
-	body := errorResponse{}
-	err := json.NewDecoder(b).Decode(&body)
+func decodeErrorResponse(b io.ReadCloser) {
+	bodyBytes, err := ioutil.ReadAll(b)
 	if err != nil {
-		fmt.Println("Error decoding error response")
+		fmt.Println(err)
 	}
-
-	fmt.Printf("Error response: %s ; %s", body.Error, body.ErrorDescription)
-	return body
+	bodyString := string(bodyBytes)
+	fmt.Println(bodyString)
 }

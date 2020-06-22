@@ -5,7 +5,8 @@ import (
 )
 
 type AuthService interface {
-	Login(username, password string) (*entities.User, error)
+	Login(username, password string) (string, error)
 	Logout(username string) error
 	RequestLogin(username string) error
+	UserInfo(token string) (*entities.User, error)
 }

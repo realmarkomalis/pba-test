@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -59,12 +60,14 @@ func (h *LoginAttemptsHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	result, err := govalidator.ValidateStruct(body)
 	if err != nil || !result {
+		fmt.Printf("Error validating %s\n", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	user, err := a.LoginUserWithCode(strings.ToLower(body.Email), body.Code)
 	if err != nil {
+		fmt.Printf("Error LoginUserWithCode %s\n", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}

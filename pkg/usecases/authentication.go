@@ -43,9 +43,14 @@ func (a AuthUsecase) RequestLogin(email string) (bool, error) {
 }
 
 func (a AuthUsecase) LoginUserWithCode(email, code string) (*entities.User, error) {
-	user, err := a.AuthService.Login(email, code)
+	token, err := a.AuthService.Login(email, code)
 	if err != nil {
 		fmt.Printf("Error loging in user with email %s: %s \n", email, err)
+		return nil, err
+	}
+
+	user, err := a.AuthService.UserInfo(token)
+	if err != nil {
 		return nil, err
 	}
 
@@ -54,7 +59,7 @@ func (a AuthUsecase) LoginUserWithCode(email, code string) (*entities.User, erro
 		return nil, err
 	}
 
-	token, err := a.TokenService.Encode(repoUser)
+	token, err = a.TokenService.Encode(repoUser)
 	if err != nil {
 		return nil, err
 	}
