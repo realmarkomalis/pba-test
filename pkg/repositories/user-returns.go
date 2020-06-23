@@ -109,8 +109,9 @@ func returnModelToEntity(ret *models.Return) entities.Return {
 		CreatedAt: ret.CreatedAt,
 		Status:    ret.Status.String(),
 		Package: entities.Package{
-			ID:   ret.Package.ID,
-			Name: ret.Package.Name,
+			ID:          ret.Package.ID,
+			Name:        ret.Package.Name,
+			PackageCode: ret.Package.PackageCode,
 		},
 	}
 }

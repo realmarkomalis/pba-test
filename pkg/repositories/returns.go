@@ -42,8 +42,9 @@ func (r ReturnRepository) GetReturn(returnID uint) (*entities.Return, error) {
 		ID:     rs.ID,
 		Status: rs.Status.String(),
 		Package: entities.Package{
-			ID:   rs.Package.ID,
-			Name: rs.Package.Name,
+			ID:          rs.Package.ID,
+			Name:        rs.Package.Name,
+			PackageCode: rs.Package.PackageCode,
 		},
 		CreatedAt: rs.CreatedAt,
 	}, nil
@@ -67,8 +68,9 @@ func (r ReturnRepository) GetReturns(packageID uint) ([]*entities.Return, error)
 			ID:     ret.ID,
 			Status: ret.Status.String(),
 			Package: entities.Package{
-				ID:   ret.Package.ID,
-				Name: ret.Package.Name,
+				ID:          ret.Package.ID,
+				Name:        ret.Package.Name,
+				PackageCode: ret.Package.PackageCode,
 			},
 			CreatedAt: ret.CreatedAt,
 		})
@@ -95,8 +97,9 @@ func (r ReturnRepository) GetActiveReturns(packageID uint) ([]*entities.Return, 
 			ID:     ret.ID,
 			Status: ret.Status.String(),
 			Package: entities.Package{
-				ID:   ret.Package.ID,
-				Name: ret.Package.Name,
+				ID:          ret.Package.ID,
+				Name:        ret.Package.Name,
+				PackageCode: ret.Package.PackageCode,
 			},
 			CreatedAt: ret.CreatedAt,
 		})
@@ -120,8 +123,9 @@ func (r ReturnRepository) CreateReturn(packageID uint) (*entities.Return, error)
 		ID:     ret.ID,
 		Status: ret.Status.String(),
 		Package: entities.Package{
-			ID:   pack.ID,
-			Name: pack.Name,
+			ID:          pack.ID,
+			Name:        pack.Name,
+			PackageCode: pack.PackageCode,
 		},
 		CreatedAt: ret.CreatedAt,
 	}, nil
@@ -156,8 +160,9 @@ func (r ReturnRepository) CreatePackageDispatch(returnID, userID uint) (*entitie
 		ID:     ret.ID,
 		Status: ret.Status.String(),
 		Package: entities.Package{
-			ID:   ret.Package.ID,
-			Name: ret.Package.Name,
+			ID:          ret.Package.ID,
+			Name:        ret.Package.Name,
+			PackageCode: ret.Package.PackageCode,
 		},
 		CreatedAt: ret.CreatedAt,
 	}, nil
@@ -191,8 +196,9 @@ func (r ReturnRepository) CreateReturnRequest(returnID, userID, slotID uint) (*e
 		ID:     ret.ID,
 		Status: ret.Status.String(),
 		Package: entities.Package{
-			ID:   ret.Package.ID,
-			Name: ret.Package.Name,
+			ID:          ret.Package.ID,
+			Name:        ret.Package.Name,
+			PackageCode: ret.Package.PackageCode,
 		},
 		CreatedAt: ret.CreatedAt,
 	}, nil
@@ -227,8 +233,9 @@ func (r ReturnRepository) CreatePackagePickup(returnID, userID uint) (*entities.
 		ID:     ret.ID,
 		Status: ret.Status.String(),
 		Package: entities.Package{
-			ID:   ret.Package.ID,
-			Name: ret.Package.Name,
+			ID:          ret.Package.ID,
+			Name:        ret.Package.Name,
+			PackageCode: ret.Package.PackageCode,
 		},
 		CreatedAt: ret.CreatedAt,
 	}, nil
@@ -267,8 +274,9 @@ func (r ReturnRepository) GetPackageDispatches(userID uint) ([]*entities.Return,
 			Status:    ret.Status.String(),
 			CreatedAt: ret.CreatedAt,
 			Package: entities.Package{
-				ID:   ret.Package.ID,
-				Name: ret.Package.Name,
+				ID:          ret.Package.ID,
+				Name:        ret.Package.Name,
+				PackageCode: ret.Package.PackageCode,
 			},
 		})
 	}
@@ -309,8 +317,9 @@ func (r ReturnRepository) GetReturnRequests(userID uint) ([]*entities.Return, er
 			Status:    ret.Status.String(),
 			CreatedAt: ret.CreatedAt,
 			Package: entities.Package{
-				ID:   ret.Package.ID,
-				Name: ret.Package.Name,
+				ID:          ret.Package.ID,
+				Name:        ret.Package.Name,
+				PackageCode: ret.Package.PackageCode,
 			},
 		})
 	}
@@ -348,8 +357,9 @@ func (r ReturnRepository) GetPackagePickups(userID uint) ([]*entities.Return, er
 			Status:    ret.Status.String(),
 			CreatedAt: ret.CreatedAt,
 			Package: entities.Package{
-				ID:   ret.Package.ID,
-				Name: ret.Package.Name,
+				ID:          ret.Package.ID,
+				Name:        ret.Package.Name,
+				PackageCode: ret.Package.PackageCode,
 			},
 		})
 	}
