@@ -28,12 +28,13 @@ type PackageDispatch struct {
 }
 
 type PickupRequest struct {
-	ID          uint      `json:"id"`
-	User        User      `json:"user"`
-	ReturnID    uint      `json:"return_id"`
-	PickupUser  User      `json:"pickup_user"`
-	RequestUser User      `json:"request_user"`
-	CreatedAt   time.Time `json:"created_at"`
+	ID          uint       `json:"id"`
+	User        User       `json:"user"`
+	ReturnID    uint       `json:"return_id"`
+	PickupSlot  PickupSlot `json:"pickup_slot"`
+	PickupUser  User       `json:"pickup_user"`
+	RequestUser User       `json:"request_user"`
+	CreatedAt   time.Time  `json:"created_at"`
 }
 
 type PackagePickup struct {

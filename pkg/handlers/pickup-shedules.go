@@ -18,9 +18,9 @@ func (h PickupShedulesHandler) GetPickupShedules(w http.ResponseWriter, r *http.
 		return
 	}
 
-	rr := repositories.ReturnRepository{DB: h.DB}
+	rr := repositories.UserReturnRepository{DB: h.DB}
 
-	rets, err := rr.GetAllReturnRequests()
+	rets, err := rr.GetScheduledReturnEntries()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

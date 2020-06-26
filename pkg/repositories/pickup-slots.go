@@ -63,7 +63,7 @@ func (r PickupSlotsRepository) BookPickupSlot(slotID uint) (*entities.PickupSlot
 	err := r.DB.
 		Model(&p).
 		Where("id = ?", slotID).
-		Update("booked", "true").
+		Updates(models.PickupSlot{Booked: true}).
 		Error
 	if err != nil {
 		return nil, err

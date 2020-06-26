@@ -74,8 +74,8 @@ func (ur UserRepository) Create(user *entities.User) (*entities.User, error) {
 		ID:    u.ID,
 		Email: u.Email,
 		UserRole: entities.UserRole{
-			Name:     u.Role.Name,
-			SystemID: u.Role.SystemID,
+			Name:     u.UserRole.Name,
+			SystemID: u.UserRole.SystemID,
 		},
 	}, nil
 }
@@ -100,8 +100,8 @@ func (ur UserRepository) UpdateUser(u *entities.User) (*entities.User, error) {
 		LastName:  user.LastName,
 		Email:     user.Email,
 		UserRole: entities.UserRole{
-			Name:     user.Role.Name,
-			SystemID: user.Role.SystemID,
+			Name:     user.UserRole.Name,
+			SystemID: user.UserRole.SystemID,
 		},
 	}, nil
 

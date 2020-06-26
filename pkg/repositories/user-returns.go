@@ -9,6 +9,7 @@ import (
 type IUserReturnRepository interface {
 	GetUserReturns(userID uint) ([]*entities.UserReturnEntry, error)
 	GetUserReturnEntries(userID uint) ([]*entities.UserReturnEntry, error)
+	GetScheduledReturnEntries() ([]*entities.UserReturnEntry, error)
 
 	CreateUserReturnEntry(userID uint, returnIDs []uint) (*entities.UserReturnEntry, error)
 }
@@ -94,10 +95,53 @@ func (r UserReturnRepository) GetUserReturnEntries(userID uint) ([]*entities.Use
 	return userReturns, nil
 }
 
+func (r UserReturnRepository) GetScheduledReturnEntries() ([]*entities.UserReturnEntry, error) {
+	rr := []models.Return{}
+	err := r.DB.
+		Model(&rr).
+		Preload("ReturnRequest").
+		Preload("ReturnRequest.PickupSlot").
+		Where("status = ?", 2).
+		Find(&rr).
+		Error
+	if err != nil {
+		return nil, err
+	}
+
+	urs := []models.UserReturnEntry{}
+	err = r.DB.
+		Model(&rr).
+		Preload("Returns").
+		Preload("Returns.Package").
+		// Preload("Returns.PackageDispatch").
+		// Preload("Returns.ReturnRequest").
+		// Preload("Returns.ReturnRequest.PickupSlot").
+		Preload("User").
+		Preload("User.UserAddresses").
+		Preload("User.UserRole").
+		Related(&urs, "UserReturnEntries").
+		Error
+	if err != nil {
+		return nil, err
+	}
+
+	userReturns := []*entities.UserReturnEntry{}
+	for _, ur := range urs {
+		userReturns = append(userReturns, &entities.UserReturnEntry{
+			ID:        ur.ID,
+			CreatedAt: ur.CreatedAt,
+			User:      ur.User.ModelToEntity(),
+			Returns:   returnModelsToEntities(ur.Returns),
+		})
+	}
+
+	return userReturns, nil
+}
+
 func returnModelsToEntities(rets []models.Return) []entities.Return {
 	returns := []entities.Return{}
 	for _, r := range rets {
-		returns = append(returns, returnModelToEntity(&r))
+		returns = append(returns, r.ModelToEntity())
 	}
 
 	return returns
@@ -105,13 +149,25 @@ func returnModelsToEntities(rets []models.Return) []entities.Return {
 
 func returnModelToEntity(ret *models.Return) entities.Return {
 	return entities.Return{
-		ID:        ret.ID,
-		CreatedAt: ret.CreatedAt,
-		Status:    ret.Status.String(),
+		ID:         ret.ID,
+		CreatedAt:  ret.CreatedAt,
+		Status:     ret.Status.String(),
+		StatusCode: int(ret.Status),
 		Package: entities.Package{
 			ID:          ret.Package.ID,
 			Name:        ret.Package.Name,
 			PackageCode: ret.Package.PackageCode,
+		},
+		PickupRequest: entities.PickupRequest{
+			ID: ret.ReturnRequest.ID,
+			PickupSlot: entities.PickupSlot{
+				ID:            ret.ReturnRequest.PickupSlot.ID,
+				StartDateTime: ret.ReturnRequest.PickupSlot.StartDateTime,
+				EndDateTime:   ret.ReturnRequest.PickupSlot.EndDateTime,
+			},
+			User: entities.User{
+				ID: ret.ReturnRequest.User.ID,
+			},
 		},
 	}
 }

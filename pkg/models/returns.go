@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/jinzhu/gorm"
+	"gitlab.com/markomalis/packback-api/pkg/entities"
 )
 
 type ReturnStatus int
@@ -21,12 +22,23 @@ const (
 
 type Return struct {
 	gorm.Model
-	Status          ReturnStatus
-	Package         Package
-	PackageID       uint
-	PackageDispatch PackageDispatch
-	ReturnRequest   ReturnRequest
-	PackagePickup   PackagePickup
+	Status            ReturnStatus
+	Package           Package
+	PackageID         uint
+	PackageDispatch   PackageDispatch
+	ReturnRequest     ReturnRequest
+	PackagePickup     PackagePickup
+	UserReturnEntries []UserReturnEntry `gorm:"many2many:user_return_entry_returns"`
+}
+
+func (r Return) ModelToEntity() entities.Return {
+	return entities.Return{
+		ID:         r.ID,
+		CreatedAt:  r.CreatedAt,
+		Status:     r.Status.String(),
+		StatusCode: int(r.Status),
+		Package:    r.Package.ModelToEntity(),
+	}
 }
 
 type UserReturnEntry struct {

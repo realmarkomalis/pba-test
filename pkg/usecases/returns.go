@@ -27,8 +27,6 @@ type ReturnsUsecase struct {
 	PickupSlotsRepo repositories.PickupSlotsRepository
 }
 
-type Bla map[string]interface{}
-
 func (u ReturnsUsecase) CreatePackageDispatches(userID uint, packageIDs []uint) ([]*entities.Return, error) {
 	rets := []*entities.Return{}
 	returnIDs := []uint{}
