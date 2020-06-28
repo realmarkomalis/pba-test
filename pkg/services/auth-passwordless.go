@@ -62,14 +62,12 @@ func (p PasswordlessAuth) Login(username, code string) (string, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= 300 {
-		fmt.Printf("errrrr 1 %d", resp.StatusCode)
 		return "", errors.New("Error logining in user")
 	}
 
 	body := loginResponse{}
 	err = json.NewDecoder(resp.Body).Decode(&body)
 	if err != nil {
-		fmt.Printf("errrrr 2: %s", err)
 		return "", err
 	}
 

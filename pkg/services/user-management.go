@@ -53,7 +53,6 @@ func (u UserManagementService) requestAccessToken() (string, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= 300 {
-		fmt.Printf("Error (%d) requesting user management access token", resp.StatusCode)
 		return "", errors.New("Unable to get access token")
 	}
 
@@ -87,7 +86,6 @@ func (u UserManagementService) CreateUser(email string) (*entities.User, error) 
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("Making user management api call with bearer token: %s", at)
 	req.Header.Add("authorization", fmt.Sprintf("Bearer %s", at))
 	req.Header.Add("content-type", "application/json")
 
@@ -99,8 +97,6 @@ func (u UserManagementService) CreateUser(email string) (*entities.User, error) 
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= 300 {
-		fmt.Println("error creating user")
-		fmt.Println(resp.StatusCode)
 		return nil, errors.New("Unable to create user")
 	}
 
@@ -109,8 +105,6 @@ func (u UserManagementService) CreateUser(email string) (*entities.User, error) 
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("res body")
-	fmt.Println(body)
 
 	return &entities.User{Email: body.Email}, nil
 }

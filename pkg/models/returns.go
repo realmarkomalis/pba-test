@@ -33,11 +33,14 @@ type Return struct {
 
 func (r Return) ModelToEntity() entities.Return {
 	return entities.Return{
-		ID:         r.ID,
-		CreatedAt:  r.CreatedAt,
-		Status:     r.Status.String(),
-		StatusCode: int(r.Status),
-		Package:    r.Package.ModelToEntity(),
+		ID:              r.ID,
+		CreatedAt:       r.CreatedAt,
+		Status:          r.Status.String(),
+		StatusCode:      int(r.Status),
+		Package:         r.Package.ModelToEntity(),
+		PackageDispatch: r.PackageDispatch.ModelToEntity(),
+		PickupRequest:   r.ReturnRequest.ModelToEntity(),
+		PackagePickup:   r.PackagePickup.ModelToEntity(),
 	}
 }
 
@@ -46,6 +49,20 @@ type UserReturnEntry struct {
 	User    User
 	UserID  uint
 	Returns []Return `gorm:"many2many:user_return_entry_returns"`
+}
+
+func (r UserReturnEntry) ModelToEntity() entities.UserReturnEntry {
+	rs := []entities.Return{}
+	for _, rr := range r.Returns {
+		rs = append(rs, rr.ModelToEntity())
+	}
+
+	return entities.UserReturnEntry{
+		ID:        r.ID,
+		CreatedAt: r.CreatedAt,
+		User:      r.User.ModelToEntity(),
+		Returns:   rs,
+	}
 }
 
 type UserReturnEntryReturns struct {
@@ -61,6 +78,24 @@ type PackageDispatch struct {
 	ReturnID uint
 }
 
+func (pd PackageDispatch) PackageDispatch() entities.PackageDispatch {
+	return entities.PackageDispatch{
+		ID:        pd.ID,
+		User:      pd.User.ModelToEntity(),
+		ReturnID:  pd.ReturnID,
+		CreatedAt: pd.CreatedAt,
+	}
+}
+
+func (pd PackageDispatch) ModelToEntity() entities.PackageDispatch {
+	return entities.PackageDispatch{
+		ID:        pd.ID,
+		User:      pd.User.ModelToEntity(),
+		ReturnID:  pd.ReturnID,
+		CreatedAt: pd.CreatedAt,
+	}
+}
+
 type ReturnRequest struct {
 	gorm.Model
 	User         User
@@ -70,11 +105,30 @@ type ReturnRequest struct {
 	PickupSlotID uint
 }
 
+func (rr ReturnRequest) ModelToEntity() entities.PickupRequest {
+	return entities.PickupRequest{
+		ID:         rr.ID,
+		User:       rr.User.ModelToEntity(),
+		ReturnID:   rr.ReturnID,
+		PickupSlot: rr.PickupSlot.ModelToEntity(),
+		CreatedAt:  rr.CreatedAt,
+	}
+}
+
 type PackagePickup struct {
 	gorm.Model
 	User     User
 	UserID   uint
 	ReturnID uint
+}
+
+func (pp PackagePickup) ModelToEntity() entities.PackagePickup {
+	return entities.PackagePickup{
+		ID:        pp.ID,
+		User:      pp.User.ModelToEntity(),
+		ReturnID:  pp.ReturnID,
+		CreatedAt: pp.CreatedAt,
+	}
 }
 
 type PickupSlot struct {
@@ -84,4 +138,13 @@ type PickupSlot struct {
 	User          User
 	UserID        uint `gorm:"-"`
 	Booked        bool `gorm:"default:false"`
+}
+
+func (ps PickupSlot) ModelToEntity() entities.PickupSlot {
+	return entities.PickupSlot{
+		ID:            ps.ID,
+		StartDateTime: ps.StartDateTime,
+		EndDateTime:   ps.EndDateTime,
+		Booked:        ps.Booked,
+	}
 }

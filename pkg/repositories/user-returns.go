@@ -99,8 +99,6 @@ func (r UserReturnRepository) GetScheduledReturnEntries() ([]*entities.UserRetur
 	rr := []models.Return{}
 	err := r.DB.
 		Model(&rr).
-		Preload("ReturnRequest").
-		Preload("ReturnRequest.PickupSlot").
 		Where("status = ?", 2).
 		Find(&rr).
 		Error
@@ -113,13 +111,11 @@ func (r UserReturnRepository) GetScheduledReturnEntries() ([]*entities.UserRetur
 		Model(&rr).
 		Preload("Returns").
 		Preload("Returns.Package").
-		// Preload("Returns.PackageDispatch").
-		// Preload("Returns.ReturnRequest").
-		// Preload("Returns.ReturnRequest.PickupSlot").
 		Preload("User").
 		Preload("User.UserAddresses").
 		Preload("User.UserRole").
 		Related(&urs, "UserReturnEntries").
+		Select("DISTINCT(id)").
 		Error
 	if err != nil {
 		return nil, err
@@ -127,6 +123,21 @@ func (r UserReturnRepository) GetScheduledReturnEntries() ([]*entities.UserRetur
 
 	userReturns := []*entities.UserReturnEntry{}
 	for _, ur := range urs {
+		for i, rt := range ur.Returns {
+			rq := models.ReturnRequest{}
+			err := r.DB.
+				Model(&rq).
+				Preload("PickupSlot").
+				Preload("User").
+				Preload("User.UserAddresses").
+				Where("return_id = ?", rt.ID).
+				First(&rq).
+				Error
+			if err == nil {
+				ur.Returns[i].ReturnRequest = rq
+			}
+		}
+
 		userReturns = append(userReturns, &entities.UserReturnEntry{
 			ID:        ur.ID,
 			CreatedAt: ur.CreatedAt,
@@ -145,29 +156,4 @@ func returnModelsToEntities(rets []models.Return) []entities.Return {
 	}
 
 	return returns
-}
-
-func returnModelToEntity(ret *models.Return) entities.Return {
-	return entities.Return{
-		ID:         ret.ID,
-		CreatedAt:  ret.CreatedAt,
-		Status:     ret.Status.String(),
-		StatusCode: int(ret.Status),
-		Package: entities.Package{
-			ID:          ret.Package.ID,
-			Name:        ret.Package.Name,
-			PackageCode: ret.Package.PackageCode,
-		},
-		PickupRequest: entities.PickupRequest{
-			ID: ret.ReturnRequest.ID,
-			PickupSlot: entities.PickupSlot{
-				ID:            ret.ReturnRequest.PickupSlot.ID,
-				StartDateTime: ret.ReturnRequest.PickupSlot.StartDateTime,
-				EndDateTime:   ret.ReturnRequest.PickupSlot.EndDateTime,
-			},
-			User: entities.User{
-				ID: ret.ReturnRequest.User.ID,
-			},
-		},
-	}
 }

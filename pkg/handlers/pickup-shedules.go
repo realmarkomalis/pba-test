@@ -5,6 +5,7 @@ import (
 
 	"github.com/jinzhu/gorm"
 	"gitlab.com/markomalis/packback-api/pkg/repositories"
+	"gitlab.com/markomalis/packback-api/pkg/usecases"
 )
 
 type PickupShedulesHandler struct {
@@ -19,8 +20,9 @@ func (h PickupShedulesHandler) GetPickupShedules(w http.ResponseWriter, r *http.
 	}
 
 	rr := repositories.UserReturnRepository{DB: h.DB}
+	u := usecases.PickupScheduleUsecase{rr}
 
-	rets, err := rr.GetScheduledReturnEntries()
+	rets, err := u.GetScheduledReturnEntries()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
