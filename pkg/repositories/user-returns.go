@@ -115,12 +115,12 @@ func (r UserReturnRepository) GetScheduledReturnEntries() ([]*entities.UserRetur
 		Preload("User.UserAddresses").
 		Preload("User.UserRole").
 		Related(&urs, "UserReturnEntries").
-		Select("DISTINCT(id)").
 		Error
 	if err != nil {
 		return nil, err
 	}
 
+	includedUserReturns := map[uint]bool{}
 	userReturns := []*entities.UserReturnEntry{}
 	for _, ur := range urs {
 		for i, rt := range ur.Returns {
@@ -138,12 +138,16 @@ func (r UserReturnRepository) GetScheduledReturnEntries() ([]*entities.UserRetur
 			}
 		}
 
-		userReturns = append(userReturns, &entities.UserReturnEntry{
-			ID:        ur.ID,
-			CreatedAt: ur.CreatedAt,
-			User:      ur.User.ModelToEntity(),
-			Returns:   returnModelsToEntities(ur.Returns),
-		})
+		_, ok := includedUserReturns[ur.ID]
+		if !ok {
+			includedUserReturns[ur.ID] = true
+			userReturns = append(userReturns, &entities.UserReturnEntry{
+				ID:        ur.ID,
+				CreatedAt: ur.CreatedAt,
+				User:      ur.User.ModelToEntity(),
+				Returns:   returnModelsToEntities(ur.Returns),
+			})
+		}
 	}
 
 	return userReturns, nil
