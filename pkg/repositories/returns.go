@@ -150,6 +150,7 @@ func (r ReturnRepository) CreatePackageSupply(returnID, userID, restaurantID uin
 			Status: models.Created,
 			PackageSupply: models.PackageSupply{
 				UserID:       userID,
+				ReturnID:     ret.ID,
 				RestaurantID: restaurantID,
 			},
 		}).
@@ -183,7 +184,8 @@ func (r ReturnRepository) CreatePackageDispatch(returnID, userID uint) (*entitie
 		Updates(models.Return{
 			Status: models.Dispatched,
 			PackageDispatch: models.PackageDispatch{
-				UserID: userID,
+				UserID:   userID,
+				ReturnID: ret.ID,
 			},
 		}).
 		Error
@@ -215,14 +217,16 @@ func (r ReturnRepository) CreateReturnRequest(returnID, userID, slotID uint) (*e
 		return nil, err
 	}
 
-	err = r.DB.Model(&ret).Updates(models.Return{
-		Status: models.Scheduled,
-		ReturnRequest: models.ReturnRequest{
-			UserID:       userID,
-			ReturnID:     ret.ID,
-			PickupSlotID: slotID,
-		},
-	}).Error
+	err = r.DB.Model(&ret).
+		Updates(models.Return{
+			Status: models.Scheduled,
+			ReturnRequest: models.ReturnRequest{
+				UserID:       userID,
+				ReturnID:     ret.ID,
+				PickupSlotID: slotID,
+			},
+		}).
+		Error
 	if err != nil {
 		return nil, err
 	}
@@ -256,7 +260,8 @@ func (r ReturnRepository) CreatePackagePickup(returnID, userID uint) (*entities.
 		Updates(models.Return{
 			Status: models.Fulfilled,
 			PackagePickup: models.PackagePickup{
-				UserID: userID,
+				UserID:   userID,
+				ReturnID: ret.ID,
 			},
 		}).
 		Error
