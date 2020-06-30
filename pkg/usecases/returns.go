@@ -8,6 +8,9 @@ import (
 )
 
 type IReturnsUsecase interface {
+	CreatePackageSupplies(userID uint, packageIDs []uint, restaurantID uint) ([]*entities.Return, error)
+	CreatePackageSupply(userID uint, packageID uint, restaurantID uint) (*entities.Return, error)
+
 	CreatePackageDispatch(userID, packageID uint) (*entities.Return, error)
 	CreatePackageDispatches(userID uint, packageIDs []uint) ([]*entities.Return, error)
 
@@ -25,6 +28,52 @@ type ReturnsUsecase struct {
 	ReturnsRepo     repositories.IReturnRepository
 	UserReturnRepo  repositories.IUserReturnRepository
 	PickupSlotsRepo repositories.PickupSlotsRepository
+}
+
+func (u ReturnsUsecase) CreatePackageSupplies(userID uint, packageIDs []uint, restaurantID uint) ([]*entities.Return, error) {
+	rets := []*entities.Return{}
+	returnIDs := []uint{}
+	for _, id := range packageIDs {
+		ret, err := u.CreatePackageSupply(userID, id, restaurantID)
+		if err == nil {
+			rets = append(rets, ret)
+			returnIDs = append(returnIDs, ret.ID)
+		}
+	}
+
+	if len(rets) == 0 {
+		return rets, nil
+	}
+
+	_, err := u.UserReturnRepo.CreateUserReturnEntry(userID, returnIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	return rets, nil
+}
+
+func (u ReturnsUsecase) CreatePackageSupply(userID uint, packageID uint, restaurantID uint) (*entities.Return, error) {
+	rets, err := u.ReturnsRepo.GetActiveReturns(packageID)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(rets) > 0 {
+		return nil, errors.New("")
+	}
+
+	ret, err := u.ReturnsRepo.CreateReturn(packageID)
+	if err != nil {
+		return nil, err
+	}
+
+	ret, err = u.ReturnsRepo.CreatePackageSupply(ret.ID, userID, restaurantID)
+	if err != nil {
+		return nil, err
+	}
+
+	return ret, nil
 }
 
 func (u ReturnsUsecase) CreatePackageDispatches(userID uint, packageIDs []uint) ([]*entities.Return, error) {
@@ -56,15 +105,19 @@ func (u ReturnsUsecase) CreatePackageDispatch(userID, packageID uint) (*entities
 		return nil, err
 	}
 
-	if len(rets) > 0 {
-		return nil, errors.New("")
+	if len(rets) == 0 {
+		return nil, errors.New("No supplied packages found")
 	}
 
-	ret, err := u.ReturnsRepo.CreateReturn(packageID)
-	if err != nil {
-		return nil, err
+	if len(rets) > 1 {
+		return nil, errors.New("Inconsitent state: Multiple active returns found")
 	}
 
+	if len(rets) == 1 && rets[0].Status != "Created" {
+		return nil, errors.New("No supplied packages found")
+	}
+
+	ret := rets[0]
 	ret, err = u.ReturnsRepo.CreatePackageDispatch(ret.ID, userID)
 	if err != nil {
 		return nil, err

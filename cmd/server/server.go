@@ -37,10 +37,12 @@ func main() {
 		&models.User{},
 		&models.UserAddress{},
 		&models.UserRole{},
+		&models.Restaurant{},
 		&models.Package{},
 		&models.Return{},
 		&models.UserReturnEntry{},
 		&models.UserReturnEntryReturns{},
+		&models.PackageSupply{},
 		&models.PackageDispatch{},
 		&models.PackagePickup{},
 		&models.ReturnRequest{},
@@ -51,7 +53,13 @@ func main() {
 
 	db.Model(&models.UserAddress{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
 
+	db.Model(&models.Restaurant{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
+
 	db.Model(&models.Return{}).AddForeignKey("package_id", "packages(id)", "RESTRICT", "RESTRICT")
+
+	db.Model(&models.PackageSupply{}).AddForeignKey("return_id", "returns(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.PackageSupply{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.PackageSupply{}).AddForeignKey("restaurant_id", "restaurants(id)", "RESTRICT", "RESTRICT")
 
 	db.Model(&models.PackageDispatch{}).AddForeignKey("return_id", "returns(id)", "RESTRICT", "RESTRICT")
 	db.Model(&models.PackageDispatch{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
@@ -68,7 +76,7 @@ func main() {
 	db.Model(&models.UserReturnEntryReturns{}).AddForeignKey("return_id", "returns(id)", "CASCADE", "CASCADE")
 
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://127.0.0.1:8080", "https://packback.netlify.app", "https://packback.app", "https://develop.packback.app"},
+		AllowedOrigins:   []string{"http://127.0.0.1:8080", "https://packback.app", "https://develop.packback.app"},
 		AllowCredentials: true,
 		AllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodOptions},
 		AllowedHeaders:   []string{"Content-Type", "X-Packback-Auth"},

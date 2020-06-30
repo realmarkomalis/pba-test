@@ -14,6 +14,10 @@ type ReturnsRequestsHandler struct {
 	DB *gorm.DB
 }
 
+type createPackageSupplyRequestBody struct {
+	PackageIDs   []uint `json:"package_ids" valid:"required"`
+	RestaurantID uint   `json:"restaurant_id" valid:"required"`
+}
 type createPackageDispatchRequestBody struct {
 	PackageIDs []uint `json:"package_ids" valid:"required"`
 }
@@ -35,6 +39,11 @@ type returnsResponseBody struct {
 func (h ReturnsRequestsHandler) Create(w http.ResponseWriter, r *http.Request) {
 	user := getUserFromRequestContext(r, w)
 
+	if user.UserRole.Name == "package_supplier" {
+		h.CreatePackageSupply(w, r)
+		return
+	}
+
 	if user.UserRole.Name == "restaurant" {
 		h.CreatePackageDispatch(w, r)
 		return
@@ -51,6 +60,35 @@ func (h ReturnsRequestsHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (h ReturnsRequestsHandler) CreatePackageSupply(w http.ResponseWriter, r *http.Request) {
+	b := createPackageSupplyRequestBody{}
+	if !validateRequestBody(r, w, &b) {
+		return
+	}
+
+	user := getUserFromRequestContext(r, w)
+	if user.UserRole.Name != "package_supplier" {
+		writeErrorResponse([]ResponseError{}, http.StatusForbidden, w)
+		return
+	}
+
+	rr := repositories.ReturnRepository{DB: h.DB}
+	urr := repositories.UserReturnRepository{DB: h.DB}
+	pr := repositories.PickupSlotsRepository{DB: h.DB}
+	u := usecases.ReturnsUsecase{
+		ReturnsRepo:     rr,
+		UserReturnRepo:  urr,
+		PickupSlotsRepo: pr,
+	}
+
+	returns, err := u.CreatePackageSupplies(user.ID, b.PackageIDs, b.RestaurantID)
+	if err != nil {
+		return
+	}
+
+	writeSuccesResponse(returnsResponseBody{Returns: returns}, w)
+}
+
 func (h ReturnsRequestsHandler) CreatePackageDispatch(w http.ResponseWriter, r *http.Request) {
 	b := createPackageDispatchRequestBody{}
 	if !validateRequestBody(r, w, &b) {
@@ -58,6 +96,11 @@ func (h ReturnsRequestsHandler) CreatePackageDispatch(w http.ResponseWriter, r *
 	}
 
 	user := getUserFromRequestContext(r, w)
+	if user.UserRole.Name != "restaurant" {
+		writeErrorResponse([]ResponseError{}, http.StatusForbidden, w)
+		return
+	}
+
 	rr := repositories.ReturnRepository{DB: h.DB}
 	urr := repositories.UserReturnRepository{DB: h.DB}
 	pr := repositories.PickupSlotsRepository{DB: h.DB}
@@ -82,6 +125,11 @@ func (h ReturnsRequestsHandler) CreateReturnRequest(w http.ResponseWriter, r *ht
 	}
 
 	user := getUserFromRequestContext(r, w)
+	if user.UserRole.Name != "customer" {
+		writeErrorResponse([]ResponseError{}, http.StatusForbidden, w)
+		return
+	}
+
 	rr := repositories.ReturnRepository{DB: h.DB}
 	urr := repositories.UserReturnRepository{DB: h.DB}
 	pr := repositories.PickupSlotsRepository{DB: h.DB}
@@ -106,6 +154,11 @@ func (h ReturnsRequestsHandler) CreatePackagePickup(w http.ResponseWriter, r *ht
 	}
 
 	user := getUserFromRequestContext(r, w)
+	if user.UserRole.Name != "rider" {
+		writeErrorResponse([]ResponseError{}, http.StatusForbidden, w)
+		return
+	}
+
 	rr := repositories.ReturnRepository{DB: h.DB}
 	urr := repositories.UserReturnRepository{DB: h.DB}
 	pr := repositories.PickupSlotsRepository{DB: h.DB}

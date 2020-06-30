@@ -25,6 +25,7 @@ type Return struct {
 	Status            ReturnStatus
 	Package           Package
 	PackageID         uint
+	PackageSupply     PackageSupply
 	PackageDispatch   PackageDispatch
 	ReturnRequest     ReturnRequest
 	PackagePickup     PackagePickup
@@ -38,6 +39,7 @@ func (r Return) ModelToEntity() entities.Return {
 		Status:          r.Status.String(),
 		StatusCode:      int(r.Status),
 		Package:         r.Package.ModelToEntity(),
+		PackageSupply:   r.PackageSupply.ModelToEntity(),
 		PackageDispatch: r.PackageDispatch.ModelToEntity(),
 		PickupRequest:   r.ReturnRequest.ModelToEntity(),
 		PackagePickup:   r.PackagePickup.ModelToEntity(),
@@ -146,5 +148,24 @@ func (ps PickupSlot) ModelToEntity() entities.PickupSlot {
 		StartDateTime: ps.StartDateTime,
 		EndDateTime:   ps.EndDateTime,
 		Booked:        ps.Booked,
+	}
+}
+
+type PackageSupply struct {
+	gorm.Model
+	User         User
+	UserID       uint
+	ReturnID     uint
+	Restaurant   Restaurant
+	RestaurantID uint
+}
+
+func (ps PackageSupply) ModelToEntity() entities.PackageSupply {
+	return entities.PackageSupply{
+		ID:         ps.ID,
+		User:       ps.User.ModelToEntity(),
+		ReturnID:   ps.ReturnID,
+		CreatedAt:  ps.CreatedAt,
+		Restaurant: ps.Restaurant.ModelToEntity(),
 	}
 }

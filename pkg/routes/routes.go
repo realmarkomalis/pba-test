@@ -74,4 +74,10 @@ func InitializeRoutes(r *mux.Router, db *gorm.DB) {
 	userChipsRouter.
 		HandleFunc("/", uch.GetUserChips).
 		Methods(http.MethodGet, http.MethodOptions)
+
+	restaurantsRouter := restAPIRouter.PathPrefix("/restaurants").Subrouter()
+	rh := handlers.RestaurantsHandler{DB: db}
+	restaurantsRouter.
+		HandleFunc("/", rh.GetRestaurants).
+		Methods(http.MethodGet, http.MethodOptions)
 }

@@ -13,6 +13,7 @@ type IReturnRepository interface {
 	GetActiveReturns(packageID uint) ([]*entities.Return, error)
 
 	CreateReturn(packageID uint) (*entities.Return, error)
+	CreatePackageSupply(returnID, userID, restaurantID uint) (*entities.Return, error)
 	CreatePackageDispatch(returnID, userID uint) (*entities.Return, error)
 	CreateReturnRequest(returnID, userID, slotID uint) (*entities.Return, error)
 	CreatePackagePickup(returnID, userID uint) (*entities.Return, error)
@@ -127,6 +128,40 @@ func (r ReturnRepository) CreateReturn(packageID uint) (*entities.Return, error)
 			Name:        pack.Name,
 			PackageCode: pack.PackageCode,
 		},
+		CreatedAt: ret.CreatedAt,
+	}, nil
+}
+
+func (r ReturnRepository) CreatePackageSupply(returnID, userID, restaurantID uint) (*entities.Return, error) {
+	ret := models.Return{}
+	err := r.DB.
+		Preload("Package").
+		Where("id = ?", returnID).
+		First(&ret).
+		Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = r.DB.
+		Model(&ret).
+		Updates(models.Return{
+			Status: models.Created,
+			PackageSupply: models.PackageSupply{
+				UserID:       userID,
+				RestaurantID: restaurantID,
+			},
+		}).
+		Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &entities.Return{
+		ID:        ret.ID,
+		Status:    ret.Status.String(),
+		Package:   ret.Package.ModelToEntity(),
 		CreatedAt: ret.CreatedAt,
 	}, nil
 }

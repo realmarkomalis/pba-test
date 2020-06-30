@@ -7,6 +7,7 @@ type Return struct {
 	Status          string          `json:"status"`
 	StatusCode      int             `json:"status_code"`
 	Package         Package         `json:"package"`
+	PackageSupply   PackageSupply   `json:"package_supply"`
 	PickupRequest   PickupRequest   `json:"pickup_request"`
 	PackageDispatch PackageDispatch `json:"package_dispatch"`
 	PackagePickup   PackagePickup   `json:"package_pickup"`
@@ -42,4 +43,12 @@ type PackagePickup struct {
 	User      User      `json:"user"`
 	ReturnID  uint      `json:"return_id"`
 	CreatedAt time.Time `json:"created_at"`
+}
+
+type PackageSupply struct {
+	ID         uint       `json:"id"`
+	User       User       `json:"user"`
+	ReturnID   uint       `json:"return_id"`
+	CreatedAt  time.Time  `json:"created_at"`
+	Restaurant Restaurant `json:"restaurant"`
 }
