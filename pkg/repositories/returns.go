@@ -144,21 +144,28 @@ func (r ReturnRepository) CreatePackageSupply(returnID, userID, restaurantID uin
 		return nil, err
 	}
 
+	ps := models.PackageSupply{
+		UserID:       userID,
+		ReturnID:     ret.ID,
+		RestaurantID: restaurantID,
+	}
 	err = r.DB.
-		Model(&ret).
+		Create(&ps).
+		Error
+	if err != nil {
+		return nil, err
+	}
+
+	err = r.DB.Model(&ret).
 		Updates(models.Return{
 			Status: models.Created,
-			PackageSupply: models.PackageSupply{
-				UserID:       userID,
-				ReturnID:     ret.ID,
-				RestaurantID: restaurantID,
-			},
 		}).
 		Error
 	if err != nil {
 		return nil, err
 	}
 
+	// ret.PackageSupply = ps
 	return &entities.Return{
 		ID:        ret.ID,
 		Status:    ret.Status.String(),
@@ -179,14 +186,20 @@ func (r ReturnRepository) CreatePackageDispatch(returnID, userID uint) (*entitie
 		return nil, err
 	}
 
+	pd := models.PackageDispatch{
+		UserID:   userID,
+		ReturnID: ret.ID,
+	}
 	err = r.DB.
-		Model(&ret).
+		Create(&pd).
+		Error
+	if err != nil {
+		return nil, err
+	}
+
+	err = r.DB.Model(&ret).
 		Updates(models.Return{
 			Status: models.Dispatched,
-			PackageDispatch: models.PackageDispatch{
-				UserID:   userID,
-				ReturnID: ret.ID,
-			},
 		}).
 		Error
 	if err != nil {
@@ -217,14 +230,21 @@ func (r ReturnRepository) CreateReturnRequest(returnID, userID, slotID uint) (*e
 		return nil, err
 	}
 
+	rr := models.ReturnRequest{
+		UserID:       userID,
+		ReturnID:     ret.ID,
+		PickupSlotID: slotID,
+	}
+	err = r.DB.
+		Create(&rr).
+		Error
+	if err != nil {
+		return nil, err
+	}
+
 	err = r.DB.Model(&ret).
 		Updates(models.Return{
 			Status: models.Scheduled,
-			ReturnRequest: models.ReturnRequest{
-				UserID:       userID,
-				ReturnID:     ret.ID,
-				PickupSlotID: slotID,
-			},
 		}).
 		Error
 	if err != nil {
@@ -255,14 +275,21 @@ func (r ReturnRepository) CreatePackagePickup(returnID, userID uint) (*entities.
 		return nil, err
 	}
 
+	pp := models.PackagePickup{
+		UserID:   userID,
+		ReturnID: ret.ID,
+	}
+	err = r.DB.
+		Create(&pp).
+		Error
+	if err != nil {
+		return nil, err
+	}
+
 	err = r.DB.
 		Model(&ret).
 		Updates(models.Return{
 			Status: models.Fulfilled,
-			PackagePickup: models.PackagePickup{
-				UserID:   userID,
-				ReturnID: ret.ID,
-			},
 		}).
 		Error
 	if err != nil {
