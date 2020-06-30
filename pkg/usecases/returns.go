@@ -106,7 +106,7 @@ func (u ReturnsUsecase) CreatePackageDispatch(userID, packageID uint) (*entities
 	}
 
 	if len(rets) == 0 {
-		return nil, errors.New("No supplied packages found")
+		return nil, errors.New("No supplied package found")
 	}
 
 	if len(rets) > 1 {
@@ -169,6 +169,10 @@ func (u ReturnsUsecase) CreateReturnRequest(userID, packageID, slotID uint) (*en
 		return nil, err
 	}
 
+	if len(rets) == 0 {
+		return nil, errors.New("No active package found")
+	}
+
 	if len(rets) > 1 {
 		return nil, errors.New("Invalid state; More then one open return found.")
 	}
@@ -177,16 +181,7 @@ func (u ReturnsUsecase) CreateReturnRequest(userID, packageID, slotID uint) (*en
 		return nil, errors.New("No 'Dispatched' return found.")
 	}
 
-	var ret *entities.Return
-	if len(rets) == 1 && rets[0].Status == "Dispatched" {
-		ret = rets[0]
-	} else if len(rets) == 0 {
-		ret, err = u.ReturnsRepo.CreateReturn(packageID)
-		if err != nil {
-			return nil, err
-		}
-	}
-
+	ret := rets[0]
 	ret, err = u.ReturnsRepo.CreateReturnRequest(ret.ID, userID, slotID)
 	if err != nil {
 		return nil, err
