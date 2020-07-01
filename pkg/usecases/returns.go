@@ -177,8 +177,8 @@ func (u ReturnsUsecase) CreateReturnRequest(userID, packageID, slotID uint) (*en
 		return nil, errors.New("Invalid state; More then one open return found.")
 	}
 
-	if len(rets) == 1 && rets[0].Status != "Dispatched" {
-		return nil, errors.New("No 'Dispatched' return found.")
+	if len(rets) == 1 && (rets[0].Status != "Dispatched" && rets[0].Status != "Created") {
+		return nil, errors.New("No 'Created' or 'Dispatched'` return found.")
 	}
 
 	ret := rets[0]
