@@ -37,6 +37,7 @@ func writeErrorResponse(errors []ResponseError, statusCode int, w http.ResponseW
 		return
 	}
 
+	w.WriteHeader(statusCode)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 }
