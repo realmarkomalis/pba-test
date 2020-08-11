@@ -85,6 +85,20 @@ func (r UserReturnRepository) GetUserReturnEntries(userID uint) ([]*entities.Use
 
 	userReturns := []*entities.UserReturnEntry{}
 	for _, ur := range urs {
+		for i, rt := range ur.Returns {
+			rq := models.ReturnRequest{}
+			err := r.DB.
+				Model(&rq).
+				Preload("PickupSlot").
+				Preload("User").
+				Preload("User.UserAddresses").
+				Where("return_id = ?", rt.ID).
+				First(&rq).
+				Error
+			if err == nil {
+				ur.Returns[i].ReturnRequest = rq
+			}
+		}
 		userReturns = append(userReturns, &entities.UserReturnEntry{
 			ID:        ur.ID,
 			CreatedAt: ur.CreatedAt,
