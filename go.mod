@@ -12,6 +12,7 @@ require (
 	github.com/jinzhu/gorm v1.9.12
 	github.com/jinzhu/now v1.1.1 // indirect
 	github.com/lib/pq v1.3.0 // indirect
+	github.com/mailgun/mailgun-go/v4 v4.1.3
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible // indirect
 	github.com/rs/cors v1.7.0 // indirect
 	github.com/satori/go.uuid v1.2.0

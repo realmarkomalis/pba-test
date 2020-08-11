@@ -30,6 +30,9 @@ func InitializeRoutes(r *mux.Router, db *gorm.DB) {
 	returnsRouter.HandleFunc("/", ReturnsRequestsHandler.GetReturns).Methods(http.MethodGet, http.MethodOptions)
 	returnsRouter.HandleFunc("/", ReturnsRequestsHandler.Create).Methods(http.MethodPost, http.MethodOptions)
 
+	returnsCountRouter := restAPIRouter.PathPrefix("/returns/count").Subrouter()
+	returnsCountRouter.HandleFunc("/", ReturnsRequestsHandler.ReturnsCount).Methods(http.MethodGet, http.MethodOptions)
+
 	packagesHandler := handlers.PackagesHandler{DB: db}
 	packageReturnsRouter := restAPIRouter.PathPrefix("/packages").Subrouter()
 	packageReturnsRouter.Use(middleware.AuthMiddleware)

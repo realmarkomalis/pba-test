@@ -18,6 +18,7 @@ type IReturnRepository interface {
 	CreateReturnRequest(returnID, userID, slotID uint) (*entities.Return, error)
 	CreatePackagePickup(returnID, userID uint) (*entities.Return, error)
 
+	GetAllPackageDispatches() ([]*entities.Return, error)
 	GetPackageDispatches(userID uint) ([]*entities.Return, error)
 	GetPackagePickups(userID uint) ([]*entities.Return, error)
 	GetReturnRequests(userID uint) ([]*entities.Return, error)
@@ -306,6 +307,40 @@ func (r ReturnRepository) CreatePackagePickup(returnID, userID uint) (*entities.
 		},
 		CreatedAt: ret.CreatedAt,
 	}, nil
+}
+
+func (r ReturnRepository) GetAllPackageDispatches() ([]*entities.Return, error) {
+	rets := []models.Return{}
+	dispatches := []models.PackageDispatch{}
+
+	err := r.DB.
+		Find(&dispatches).
+		Error
+	if err != nil {
+		return nil, err
+	}
+
+	returnIDs := []uint{}
+	for _, d := range dispatches {
+		returnIDs = append(returnIDs, d.ReturnID)
+	}
+
+	err = r.DB.
+		Preload("Package").
+		Where("id in (?)", returnIDs).
+		Find(&rets).
+		Error
+	if err != nil {
+		return nil, err
+	}
+
+	returns := []*entities.Return{}
+	for _, ret := range rets {
+		r := ret.ModelToEntity()
+		returns = append(returns, &r)
+	}
+
+	return returns, nil
 }
 
 func (r ReturnRepository) GetPackageDispatches(userID uint) ([]*entities.Return, error) {

@@ -253,3 +253,16 @@ func (h ReturnsRequestsHandler) GetPackagePickups(w http.ResponseWriter, r *http
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 }
+
+func (h ReturnsRequestsHandler) ReturnsCount(w http.ResponseWriter, r *http.Request) {
+	rr := repositories.ReturnRepository{h.DB}
+	returns, err := rr.GetAllPackageDispatches()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	writeSuccesResponse(struct {
+		Count int `json:"count"`
+	}{len(returns)}, w)
+}
