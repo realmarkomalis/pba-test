@@ -2,11 +2,14 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/jinzhu/gorm"
+	"github.com/spf13/viper"
 	"gitlab.com/markomalis/packback-api/pkg/entities"
 	"gitlab.com/markomalis/packback-api/pkg/repositories"
+	"gitlab.com/markomalis/packback-api/pkg/services"
 	"gitlab.com/markomalis/packback-api/pkg/usecases"
 )
 
@@ -142,6 +145,24 @@ func (h ReturnsRequestsHandler) CreateReturnRequest(w http.ResponseWriter, r *ht
 	returns, err := u.CreateReturnRequests(user.ID, b.SlotID, b.PackageIDs)
 	if err != nil {
 		return
+	}
+
+	es := services.NewEmailService(
+		viper.GetString("email_service.domain"),
+		viper.GetString("email_service.secret_key"),
+	)
+	_, err = es.SendEmail(
+		"PackBack <info@packback.app>",
+		[]string{
+			"tristan@sharedpackaging.com",
+			"realmarkomalis@gmail.com",
+			"tinebakia@hotmail.nl",
+		},
+		"PackBack - New pickup",
+		fmt.Sprintf("New pickup for %d packies.", len(returns)),
+	)
+	if err != nil {
+		// log error sending mail
 	}
 
 	writeSuccesResponse(returnsResponseBody{Returns: returns}, w)
