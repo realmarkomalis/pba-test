@@ -83,4 +83,11 @@ func InitializeRoutes(r *mux.Router, db *gorm.DB) {
 	restaurantsRouter.
 		HandleFunc("/", rh.GetRestaurants).
 		Methods(http.MethodGet, http.MethodOptions)
+
+	reportsRouter := restAPIRouter.PathPrefix("/reports").Subrouter()
+	reportsRouter.Use(middleware.AuthMiddleware)
+	rph := handlers.ReportsHandler{DB: db}
+	reportsRouter.
+		HandleFunc("/", rph.StatusesPerRestaurant).
+		Methods(http.MethodGet, http.MethodOptions)
 }
