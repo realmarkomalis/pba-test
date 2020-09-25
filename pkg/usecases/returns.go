@@ -14,8 +14,8 @@ type IReturnsUsecase interface {
 	CreatePackageDispatch(userID, packageID uint) (*entities.Return, error)
 	CreatePackageDispatches(userID uint, packageIDs []uint) ([]*entities.Return, error)
 
-	CreateReturnRequest(userID, packageID, slotID uint) (*entities.Return, error)
-	CreateReturnRequests(userID, slotID uint, packageIDs []uint) ([]*entities.Return, error)
+	CreateReturnRequest(userID, packageID, slotID uint, comment string) (*entities.Return, error)
+	CreateReturnRequests(userID, slotID uint, packageIDs []uint, comment string) ([]*entities.Return, error)
 
 	CreatePackagePickup(userID, packageID uint) (*entities.PackagePickup, error)
 	CreatePackagePickups(userID uint, packageIDs []uint) ([]*entities.Return, error)
@@ -126,7 +126,7 @@ func (u ReturnsUsecase) CreatePackageDispatch(userID, packageID uint) (*entities
 	return ret, nil
 }
 
-func (u ReturnsUsecase) CreateReturnRequests(userID, slotID uint, packageIDs []uint) ([]*entities.Return, error) {
+func (u ReturnsUsecase) CreateReturnRequests(userID, slotID uint, packageIDs []uint, comment string) ([]*entities.Return, error) {
 	slot, err := u.PickupSlotsRepo.GetPickupSlot(slotID)
 	if err != nil {
 		return nil, err
@@ -139,7 +139,7 @@ func (u ReturnsUsecase) CreateReturnRequests(userID, slotID uint, packageIDs []u
 	rets := []*entities.Return{}
 	returnIDs := []uint{}
 	for _, id := range packageIDs {
-		ret, err := u.CreateReturnRequest(userID, id, slot.ID)
+		ret, err := u.CreateReturnRequest(userID, id, slot.ID, comment)
 		if err == nil {
 			rets = append(rets, ret)
 			returnIDs = append(returnIDs, ret.ID)
@@ -163,7 +163,7 @@ func (u ReturnsUsecase) CreateReturnRequests(userID, slotID uint, packageIDs []u
 	return rets, nil
 }
 
-func (u ReturnsUsecase) CreateReturnRequest(userID, packageID, slotID uint) (*entities.Return, error) {
+func (u ReturnsUsecase) CreateReturnRequest(userID, packageID, slotID uint, comment string) (*entities.Return, error) {
 	rets, err := u.ReturnsRepo.GetActiveReturns(packageID)
 	if err != nil {
 		return nil, err
@@ -182,7 +182,7 @@ func (u ReturnsUsecase) CreateReturnRequest(userID, packageID, slotID uint) (*en
 	}
 
 	ret := rets[0]
-	ret, err = u.ReturnsRepo.CreateReturnRequest(ret.ID, userID, slotID)
+	ret, err = u.ReturnsRepo.CreateReturnRequest(ret.ID, userID, slotID, comment)
 	if err != nil {
 		return nil, err
 	}

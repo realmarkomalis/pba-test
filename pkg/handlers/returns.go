@@ -27,7 +27,8 @@ type createPackageDispatchRequestBody struct {
 
 type createReturnRequestRequestBody struct {
 	PackageIDs []uint `json:"package_ids" valid:"required"`
-	SlotID     uint   `json:"slot_id" valid:"type(uint)"`
+	SlotID     uint   `json:"slot_id" valid:"type(uint),required"`
+	Comment    string `json:"comment" valid:"type(string),optional"`
 }
 
 type createPackagePickupRequestBody struct {
@@ -142,8 +143,11 @@ func (h ReturnsRequestsHandler) CreateReturnRequest(w http.ResponseWriter, r *ht
 		PickupSlotsRepo: pr,
 	}
 
-	returns, err := u.CreateReturnRequests(user.ID, b.SlotID, b.PackageIDs)
+	fmt.Println("creating return request")
+
+	returns, err := u.CreateReturnRequests(user.ID, b.SlotID, b.PackageIDs, b.Comment)
 	if err != nil {
+		writeErrorResponse([]ResponseError{}, http.StatusBadRequest, w)
 		return
 	}
 

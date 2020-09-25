@@ -44,10 +44,11 @@ func (ur UserRepository) GetByEmail(email string) (*entities.User, error) {
 	}
 
 	return &entities.User{
-		ID:        user.ID,
-		Email:     user.Email,
-		FirstName: user.FirstName,
-		LastName:  user.LastName,
+		ID:          user.ID,
+		Email:       user.Email,
+		FirstName:   user.FirstName,
+		LastName:    user.LastName,
+		PhoneNumber: user.PhoneNumber,
 		UserRole: entities.UserRole{
 			Name:     role.Name,
 			SystemID: role.SystemID,
@@ -71,8 +72,11 @@ func (ur UserRepository) Create(user *entities.User) (*entities.User, error) {
 	}
 
 	return &entities.User{
-		ID:    u.ID,
-		Email: u.Email,
+		ID:          u.ID,
+		Email:       u.Email,
+		FirstName:   u.FirstName,
+		LastName:    u.LastName,
+		PhoneNumber: u.PhoneNumber,
 		UserRole: entities.UserRole{
 			Name:     u.UserRole.Name,
 			SystemID: u.UserRole.SystemID,
@@ -85,9 +89,10 @@ func (ur UserRepository) UpdateUser(u *entities.User) (*entities.User, error) {
 	err := ur.DB.Model(&user).
 		Where("id = ?", u.ID).
 		Updates(models.User{
-			FirstName: u.FirstName,
-			LastName:  u.LastName,
-			Email:     u.Email,
+			FirstName:   u.FirstName,
+			LastName:    u.LastName,
+			Email:       u.Email,
+			PhoneNumber: u.PhoneNumber,
 		}).
 		Error
 	if err != nil {
@@ -95,10 +100,11 @@ func (ur UserRepository) UpdateUser(u *entities.User) (*entities.User, error) {
 	}
 
 	return &entities.User{
-		ID:        user.ID,
-		FirstName: user.FirstName,
-		LastName:  user.LastName,
-		Email:     user.Email,
+		ID:          user.ID,
+		FirstName:   user.FirstName,
+		LastName:    user.LastName,
+		Email:       user.Email,
+		PhoneNumber: user.PhoneNumber,
 		UserRole: entities.UserRole{
 			Name:     user.UserRole.Name,
 			SystemID: user.UserRole.SystemID,

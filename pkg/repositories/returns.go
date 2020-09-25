@@ -15,7 +15,7 @@ type IReturnRepository interface {
 	CreateReturn(packageID uint) (*entities.Return, error)
 	CreatePackageSupply(returnID, userID, restaurantID uint) (*entities.Return, error)
 	CreatePackageDispatch(returnID, userID uint) (*entities.Return, error)
-	CreateReturnRequest(returnID, userID, slotID uint) (*entities.Return, error)
+	CreateReturnRequest(returnID, userID, slotID uint, comment string) (*entities.Return, error)
 	CreatePackagePickup(returnID, userID uint) (*entities.Return, error)
 
 	GetAllPackageDispatches() ([]*entities.Return, error)
@@ -219,7 +219,7 @@ func (r ReturnRepository) CreatePackageDispatch(returnID, userID uint) (*entitie
 	}, nil
 }
 
-func (r ReturnRepository) CreateReturnRequest(returnID, userID, slotID uint) (*entities.Return, error) {
+func (r ReturnRepository) CreateReturnRequest(returnID, userID, slotID uint, comment string) (*entities.Return, error) {
 	ret := models.Return{}
 	err := r.DB.
 		Preload("Package").
@@ -235,6 +235,7 @@ func (r ReturnRepository) CreateReturnRequest(returnID, userID, slotID uint) (*e
 		UserID:       userID,
 		ReturnID:     ret.ID,
 		PickupSlotID: slotID,
+		PickupNote:   comment,
 	}
 	err = r.DB.
 		Create(&rr).

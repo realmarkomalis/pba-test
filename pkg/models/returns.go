@@ -105,6 +105,7 @@ type ReturnRequest struct {
 	ReturnID     uint
 	PickupSlot   PickupSlot
 	PickupSlotID uint
+	PickupNote   string
 }
 
 func (rr ReturnRequest) ModelToEntity() entities.PickupRequest {
@@ -113,6 +114,7 @@ func (rr ReturnRequest) ModelToEntity() entities.PickupRequest {
 		User:       rr.User.ModelToEntity(),
 		ReturnID:   rr.ReturnID,
 		PickupSlot: rr.PickupSlot.ModelToEntity(),
+		PickupNote: rr.PickupNote,
 		CreatedAt:  rr.CreatedAt,
 	}
 }

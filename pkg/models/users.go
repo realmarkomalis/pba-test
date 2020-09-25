@@ -11,6 +11,7 @@ type User struct {
 	LastName      string
 	Email         string `gorm:"type:varchar(100);unique; not null"`
 	IBAN          string
+	PhoneNumber   string
 	UserRole      UserRole
 	UserRoleID    int
 	UserAddresses []UserAddress
@@ -28,6 +29,7 @@ func (u User) ModelToEntity() entities.User {
 		FirstName:     u.FirstName,
 		LastName:      u.LastName,
 		Email:         u.Email,
+		PhoneNumber:   u.PhoneNumber,
 		UserAddresses: uas,
 		UserRole:      u.UserRole.ModelToEntity(),
 	}
