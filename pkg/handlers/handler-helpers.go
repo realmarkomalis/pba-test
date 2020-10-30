@@ -3,20 +3,13 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
-	"time"
 
 	"github.com/asaskevich/govalidator"
 	"gitlab.com/markomalis/packback-api/pkg/entities"
 )
 
 type ErrorResponse struct {
-	Errors []ResponseError `json:"errors"`
-}
-
-type ResponseError struct {
-	Message    string `json:"message"`
-	Code       string `json:"code"`
-	ResourceID uint   `json:"resource_id"`
+	Errors []entities.APIError `json:"errors"`
 }
 
 func writeSuccesResponse(data interface{}, w http.ResponseWriter) {
@@ -30,7 +23,7 @@ func writeSuccesResponse(data interface{}, w http.ResponseWriter) {
 	w.Write(js)
 }
 
-func writeErrorResponse(errors []ResponseError, statusCode int, w http.ResponseWriter) {
+func writeErrorResponse(errors []entities.APIError, statusCode int, w http.ResponseWriter) {
 	js, err := json.Marshal(ErrorResponse{Errors: errors})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -46,7 +39,7 @@ func getUserFromRequestContext(r *http.Request, w http.ResponseWriter) *entities
 	user := r.Context().Value("User")
 
 	if user == nil {
-		writeErrorResponse([]ResponseError{
+		writeErrorResponse([]entities.APIError{
 			{
 				Message: "No user found",
 				Code:    "0",
@@ -61,7 +54,7 @@ func getUserFromRequestContext(r *http.Request, w http.ResponseWriter) *entities
 func validateRequestBody(r *http.Request, w http.ResponseWriter, body interface{}) bool {
 	err := json.NewDecoder(r.Body).Decode(body)
 	if err != nil {
-		writeErrorResponse([]ResponseError{
+		writeErrorResponse([]entities.APIError{
 			{
 				Message: err.Error(),
 				Code:    "0",
@@ -72,7 +65,7 @@ func validateRequestBody(r *http.Request, w http.ResponseWriter, body interface{
 
 	result, err := govalidator.ValidateStruct(body)
 	if err != nil {
-		writeErrorResponse([]ResponseError{
+		writeErrorResponse([]entities.APIError{
 			{
 				Message: err.Error(),
 				Code:    "0",
@@ -82,7 +75,7 @@ func validateRequestBody(r *http.Request, w http.ResponseWriter, body interface{
 	}
 
 	if !result {
-		writeErrorResponse([]ResponseError{
+		writeErrorResponse([]entities.APIError{
 			{
 				Message: err.Error(),
 				Code:    "0",
@@ -92,16 +85,4 @@ func validateRequestBody(r *http.Request, w http.ResponseWriter, body interface{
 	}
 
 	return true
-}
-
-func addCookie(w http.ResponseWriter, name, value string, ttl time.Duration) {
-	expire := time.Now().Add(ttl)
-	cookie := http.Cookie{
-		Name:     name,
-		Value:    value,
-		Expires:  expire,
-		HttpOnly: true,
-		Domain:   "127.0.0.1",
-	}
-	http.SetCookie(w, &cookie)
 }

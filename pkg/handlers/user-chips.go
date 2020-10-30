@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/jinzhu/gorm"
+	"gitlab.com/markomalis/packback-api/pkg/entities"
 	"gitlab.com/markomalis/packback-api/pkg/repositories"
 	"gitlab.com/markomalis/packback-api/pkg/usecases"
 )
@@ -25,7 +26,7 @@ func (h UserChipsHandler) GetUserChips(w http.ResponseWriter, r *http.Request) {
 
 	chips, err := u.GetUserChips(user.ID)
 	if err != nil {
-		writeErrorResponse([]ResponseError{
+		writeErrorResponse([]entities.APIError{
 			{
 				Message: "Unable to get the users chips",
 				Code:    "0",

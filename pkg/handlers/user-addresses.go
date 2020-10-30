@@ -41,7 +41,7 @@ func (h UserAddressesHandler) CreateUserAddress(w http.ResponseWriter, r *http.R
 		Country:           "NL",
 	})
 	if err != nil {
-		writeErrorResponse([]ResponseError{
+		writeErrorResponse([]entities.APIError{
 			{
 				Message: err.Error(),
 				Code:    "0",
@@ -58,7 +58,7 @@ func (h UserAddressesHandler) CreateUserAddress(w http.ResponseWriter, r *http.R
 		PhoneNumber: a.PhoneNumber,
 	})
 	if err != nil {
-		writeErrorResponse([]ResponseError{
+		writeErrorResponse([]entities.APIError{
 			{
 				Message: err.Error(),
 				Code:    "0",
@@ -88,7 +88,7 @@ func (h UserAddressesHandler) UpdateUserAddress(w http.ResponseWriter, r *http.R
 		Country:           "NL",
 	})
 	if err != nil {
-		writeErrorResponse([]ResponseError{
+		writeErrorResponse([]entities.APIError{
 			{
 				Message: err.Error(),
 				Code:    "0",
@@ -104,7 +104,7 @@ func (h UserAddressesHandler) UpdateUserAddress(w http.ResponseWriter, r *http.R
 		LastName:  a.LastName,
 	})
 	if err != nil {
-		writeErrorResponse([]ResponseError{
+		writeErrorResponse([]entities.APIError{
 			{
 				Message: err.Error(),
 				Code:    "0",

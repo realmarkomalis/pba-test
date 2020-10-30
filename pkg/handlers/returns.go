@@ -72,7 +72,7 @@ func (h ReturnsRequestsHandler) CreatePackageSupply(w http.ResponseWriter, r *ht
 
 	user := getUserFromRequestContext(r, w)
 	if user.UserRole.Name != "package_supplier" {
-		writeErrorResponse([]ResponseError{}, http.StatusForbidden, w)
+		writeErrorResponse([]entities.APIError{}, http.StatusForbidden, w)
 		return
 	}
 
@@ -101,7 +101,7 @@ func (h ReturnsRequestsHandler) CreatePackageDispatch(w http.ResponseWriter, r *
 
 	user := getUserFromRequestContext(r, w)
 	if user.UserRole.Name != "restaurant" {
-		writeErrorResponse([]ResponseError{}, http.StatusForbidden, w)
+		writeErrorResponse([]entities.APIError{}, http.StatusForbidden, w)
 		return
 	}
 
@@ -130,7 +130,7 @@ func (h ReturnsRequestsHandler) CreateReturnRequest(w http.ResponseWriter, r *ht
 
 	user := getUserFromRequestContext(r, w)
 	if user.UserRole.Name != "customer" {
-		writeErrorResponse([]ResponseError{}, http.StatusForbidden, w)
+		writeErrorResponse([]entities.APIError{}, http.StatusForbidden, w)
 		return
 	}
 
@@ -147,7 +147,7 @@ func (h ReturnsRequestsHandler) CreateReturnRequest(w http.ResponseWriter, r *ht
 
 	returns, err := u.CreateReturnRequests(user.ID, b.SlotID, b.PackageIDs, b.Comment)
 	if err != nil {
-		writeErrorResponse([]ResponseError{}, http.StatusBadRequest, w)
+		writeErrorResponse([]entities.APIError{}, http.StatusBadRequest, w)
 		return
 	}
 
@@ -180,7 +180,7 @@ func (h ReturnsRequestsHandler) CreatePackagePickup(w http.ResponseWriter, r *ht
 
 	user := getUserFromRequestContext(r, w)
 	if user.UserRole.Name != "rider" {
-		writeErrorResponse([]ResponseError{}, http.StatusForbidden, w)
+		writeErrorResponse([]entities.APIError{}, http.StatusForbidden, w)
 		return
 	}
 

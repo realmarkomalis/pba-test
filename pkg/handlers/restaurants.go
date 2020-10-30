@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/jinzhu/gorm"
+	"gitlab.com/markomalis/packback-api/pkg/entities"
 	"gitlab.com/markomalis/packback-api/pkg/repositories"
 )
 
@@ -16,7 +17,7 @@ func (h RestaurantsHandler) GetRestaurants(w http.ResponseWriter, r *http.Reques
 
 	restaurants, err := rr.GetRestaurants()
 	if err != nil {
-		writeErrorResponse([]ResponseError{
+		writeErrorResponse([]entities.APIError{
 			{
 				Message: err.Error(),
 				Code:    "",

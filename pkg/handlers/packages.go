@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
 
+	"gitlab.com/markomalis/packback-api/pkg/entities"
 	"gitlab.com/markomalis/packback-api/pkg/services"
 )
 
@@ -27,7 +28,7 @@ func (h PackagesHandler) GetPackageCode(w http.ResponseWriter, r *http.Request) 
 
 	id, err := strconv.ParseUint(mux.Vars(r)["package_id"], 10, 64)
 	if err != nil {
-		writeErrorResponse([]ResponseError{
+		writeErrorResponse([]entities.APIError{
 			{
 				Message: err.Error(),
 				Code:    "0",
@@ -39,7 +40,7 @@ func (h PackagesHandler) GetPackageCode(w http.ResponseWriter, r *http.Request) 
 	s := services.QRCodeService{}
 	code, err := s.CreateBase64Code(fmt.Sprintf("https://packback.app/scanner?packback_id=%d", id))
 	if err != nil {
-		writeErrorResponse([]ResponseError{
+		writeErrorResponse([]entities.APIError{
 			{
 				Message: err.Error(),
 				Code:    "0",
