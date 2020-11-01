@@ -17,6 +17,7 @@ func InitializeRoutes(r *mux.Router, db *gorm.DB) {
 	meRouter := restAPIRouter.PathPrefix("/me").Subrouter()
 	meRouter.Use(middleware.AuthMiddleware)
 	meRouter.HandleFunc("/", MeHandler.GetMe).Methods(http.MethodGet, http.MethodOptions)
+	meRouter.HandleFunc("/qr-codes/", MeHandler.GetMyQR).Methods(http.MethodGet, http.MethodOptions)
 
 	LoginRequestsHandler := handlers.LoginRequestsHandler{DB: db}
 	restAPIRouter.HandleFunc("/login-requests/", LoginRequestsHandler.Create).Methods(http.MethodPost, http.MethodOptions)
