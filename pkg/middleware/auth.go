@@ -16,7 +16,6 @@ func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("X-PackBack-Auth")
 		if authHeader == "" {
-			log.Println("Required header not found")
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}

@@ -35,6 +35,11 @@ func InitializeRoutes(r *mux.Router, db *gorm.DB) {
 	returnsCountRouter.HandleFunc("/", ReturnsRequestsHandler.ReturnsCount).Methods(http.MethodGet, http.MethodOptions)
 
 	packagesHandler := handlers.PackagesHandler{DB: db}
+	packagesRouter := restAPIRouter.PathPrefix("/packages").Subrouter()
+	packagesRouter.
+		HandleFunc("/{package_id:[0-9]+}/", packagesHandler.GetPackage).
+		Methods(http.MethodGet, http.MethodOptions)
+
 	packageReturnsRouter := restAPIRouter.PathPrefix("/packages").Subrouter()
 	packageReturnsRouter.Use(middleware.AuthMiddleware)
 	// packageReturnsRouter.HandleFunc("/{id:[0-9]+}/package-dispatches/", ReturnsRequestsHandler.GetReturns).Methods(http.MethodPost, http.MethodOptions)
@@ -90,5 +95,35 @@ func InitializeRoutes(r *mux.Router, db *gorm.DB) {
 	rph := handlers.ReportsHandler{DB: db}
 	reportsRouter.
 		HandleFunc("/", rph.StatusesPerRestaurant).
+		Methods(http.MethodGet, http.MethodOptions)
+
+	dih := handlers.DropOffIntentsHandler{DB: db}
+	dropOffIntentsRouter := restAPIRouter.PathPrefix("/drop-off-intents/").Subrouter()
+	dropOffIntentsRouter.Use(middleware.AuthMiddleware)
+	dropOffIntentsRouter.
+		HandleFunc("/", dih.CreateDropOffIntent).
+		Methods(http.MethodPost, http.MethodOptions)
+
+	doh := handlers.DropOffPointsHandler{DB: db}
+	dropOffPointsRouter := restAPIRouter.PathPrefix("/drop-off-points/").Subrouter()
+	dropOffPointsRouter.
+		HandleFunc("/", doh.ListDropOffPoints).
+		Methods(http.MethodGet, http.MethodOptions)
+	dropOffPointsRouter.
+		HandleFunc("/{dop_id:[0-9]+}/", doh.GetDropOffPoint).
+		Methods(http.MethodGet, http.MethodOptions)
+
+	dch := handlers.DropOffCollectsHandler{DB: db}
+	dropOffCollectsRouter := restAPIRouter.PathPrefix("/drop-off-collects/").Subrouter()
+	dropOffCollectsRouter.Use(middleware.AuthMiddleware)
+	dropOffCollectsRouter.
+		HandleFunc("/", dch.CreateDropOffCollect).
+		Methods(http.MethodPost, http.MethodOptions)
+
+	pch := handlers.PackageCyclesHandler{DB: db}
+	packageCyclesRouter := restAPIRouter.PathPrefix("/packages/").Subrouter()
+	packageCyclesRouter.Use(middleware.AuthMiddleware)
+	packageCyclesRouter.
+		HandleFunc("/{package_id:[0-9]+}/cycles/", pch.GetPackageCycles).
 		Methods(http.MethodGet, http.MethodOptions)
 }

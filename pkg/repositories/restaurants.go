@@ -34,3 +34,19 @@ func (r RestaurantsRepository) GetRestaurants() ([]*entities.Restaurant, error) 
 
 	return restaurants, nil
 }
+
+func (r RestaurantsRepository) GetRestaurant(userID uint) (*entities.Restaurant, error) {
+	rs := models.Restaurant{}
+
+	err := r.DB.
+		Model(&rs).
+		Where("user_id = ?", userID).
+		First(&rs).
+		Error
+	if err != nil {
+		return nil, err
+	}
+
+	restaurant := rs.ModelToEntity()
+	return &restaurant, nil
+}

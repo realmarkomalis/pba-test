@@ -281,7 +281,7 @@ func (h ReturnsRequestsHandler) GetPackagePickups(w http.ResponseWriter, r *http
 
 func (h ReturnsRequestsHandler) ReturnsCount(w http.ResponseWriter, r *http.Request) {
 	rr := repositories.ReturnRepository{h.DB}
-	returns, err := rr.GetAllPackageDispatches()
+	returns, err := rr.GetAllPackageSupplies()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

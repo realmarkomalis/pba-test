@@ -10,7 +10,7 @@ import (
 type ReturnStatus int
 
 func (r ReturnStatus) String() string {
-	return [...]string{"Created", "Dispatched", "Scheduled", "Fulfilled"}[r]
+	return [...]string{"Created", "Dispatched", "Scheduled", "Fulfilled", "Collected", "DropOffIntended"}[r]
 }
 
 const (
@@ -18,6 +18,8 @@ const (
 	Dispatched
 	Scheduled
 	Fulfilled
+	Collected
+	DropOffIntended
 )
 
 type Return struct {

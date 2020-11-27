@@ -39,6 +39,7 @@ func main() {
 		&models.UserRole{},
 		&models.Restaurant{},
 		&models.Package{},
+		&models.PackageType{},
 		&models.Return{},
 		&models.UserReturnEntry{},
 		&models.UserReturnEntryReturns{},
@@ -47,6 +48,9 @@ func main() {
 		&models.PackagePickup{},
 		&models.ReturnRequest{},
 		&models.PickupSlot{},
+		&models.DropOffPoint{},
+		&models.DropOffIntent{},
+		&models.DropOffCollect{},
 	)
 
 	db.Model(&models.User{}).AddForeignKey("user_role_id", "user_roles(id)", "RESTRICT", "RESTRICT")
@@ -56,6 +60,8 @@ func main() {
 	db.Model(&models.Restaurant{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
 
 	db.Model(&models.Return{}).AddForeignKey("package_id", "packages(id)", "RESTRICT", "RESTRICT")
+
+	db.Model(&models.Package{}).AddForeignKey("package_type_id", "package_types(id)", "RESTRICT", "RESTRICT")
 
 	db.Model(&models.PackageSupply{}).AddForeignKey("return_id", "returns(id)", "RESTRICT", "RESTRICT")
 	db.Model(&models.PackageSupply{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
@@ -74,6 +80,14 @@ func main() {
 	db.Model(&models.UserReturnEntry{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
 	db.Model(&models.UserReturnEntryReturns{}).AddForeignKey("user_return_entry_id", "user_return_entries(id)", "CASCADE", "CASCADE")
 	db.Model(&models.UserReturnEntryReturns{}).AddForeignKey("return_id", "returns(id)", "CASCADE", "CASCADE")
+
+	db.Model(&models.DropOffIntent{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.DropOffIntent{}).AddForeignKey("return_id", "returns(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.DropOffIntent{}).AddForeignKey("drop_off_point_id", "drop_off_points(id)", "CASCADE", "CASCADE")
+
+	db.Model(&models.DropOffCollect{}).AddForeignKey("return_id", "returns(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.DropOffCollect{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
+	db.Model(&models.DropOffCollect{}).AddForeignKey("drop_off_point_id", "drop_off_points(id)", "CASCADE", "CASCADE")
 
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"http://127.0.0.1:8080", "https://packback.app", "https://develop.packback.app"},
