@@ -48,7 +48,7 @@ func (h ReturnsRequestsHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if user.UserRole.Name == "restaurant" {
+	if user.UserRole.Name == "restaurant" || user.UserRole.Name == "closed_loop_restaurant" {
 		h.CreatePackageDispatch(w, r)
 		return
 	}
@@ -100,7 +100,7 @@ func (h ReturnsRequestsHandler) CreatePackageDispatch(w http.ResponseWriter, r *
 	}
 
 	user := getUserFromRequestContext(r, w)
-	if user.UserRole.Name != "restaurant" {
+	if user.UserRole.Name != "restaurant" && user.UserRole.Name != "closed_loop_restaurant" {
 		writeErrorResponse([]entities.APIError{}, http.StatusForbidden, w)
 		return
 	}

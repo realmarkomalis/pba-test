@@ -34,6 +34,7 @@ func (r ReturnRepository) GetReturn(returnID uint) (*entities.Return, error) {
 	rs := models.Return{}
 	err := r.DB.
 		Preload("Package").
+		Preload("Package.PackageType").
 		Where("id = ?", returnID).
 		First(&rs).
 		Error
@@ -49,6 +50,7 @@ func (r ReturnRepository) GetReturn(returnID uint) (*entities.Return, error) {
 			ID:          rs.Package.ID,
 			Name:        rs.Package.Name,
 			PackageCode: rs.Package.PackageCode,
+			PackageType: rs.Package.PackageType.ModelToEntity(),
 		},
 		CreatedAt: rs.CreatedAt,
 	}, nil

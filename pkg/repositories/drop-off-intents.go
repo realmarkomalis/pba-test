@@ -35,3 +35,22 @@ func (r DropOffIntentsRepository) CreateDropOffIntent(userID, returnID, dropOffP
 	d := doi.ModelToEntity()
 	return &d, nil
 }
+
+func (r DropOffIntentsRepository) GetUserDropOffIntents(userID uint) ([]entities.DropOffIntent, error) {
+	doi := []models.DropOffIntent{}
+
+	err := r.DB.
+		Where("user_id = ?", userID).
+		Find(&doi).
+		Error
+	if err != nil {
+		return nil, err
+	}
+
+	dois := []entities.DropOffIntent{}
+	for _, d := range doi {
+		dois = append(dois, d.ModelToEntity())
+	}
+
+	return dois, nil
+}

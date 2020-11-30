@@ -20,6 +20,13 @@ type myQRCodeResponse struct {
 	Code string `json:"code"`
 }
 
+type updateUserRequestBody struct {
+	FirstName   string `json:"first_name" valid:"type(string),optional"`
+	LastName    string `json:"last_name" valid:"type(string),optional"`
+	PhoneNumber string `json:"phonenumber" valid:"type(string),optional"`
+	IBAN        string `json:"iban" valid:"type(string),optional"`
+}
+
 func (h MeHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	u := getUserFromRequestContext(r, w)
 	ur := repositories.UserRepository{DB: h.DB}
@@ -62,4 +69,34 @@ func (h MeHandler) GetMyQR(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeSuccesResponse(myQRCodeResponse{Code: code}, w)
+}
+
+func (h MeHandler) UpdateMe(w http.ResponseWriter, r *http.Request) {
+	u := getUserFromRequestContext(r, w)
+
+	b := updateUserRequestBody{}
+	if !validateRequestBody(r, w, &b) {
+		return
+	}
+
+	ur := repositories.UserRepository{DB: h.DB}
+	user, err := ur.UpdateUser(&entities.User{
+		ID:          u.ID,
+		FirstName:   b.FirstName,
+		LastName:    b.LastName,
+		PhoneNumber: b.PhoneNumber,
+		IBAN:        b.IBAN,
+	})
+
+	if err != nil {
+		writeErrorResponse([]entities.APIError{
+			{
+				Message: err.Error(),
+				Code:    "0",
+			},
+		}, http.StatusBadRequest, w)
+		return
+	}
+
+	writeSuccesResponse(user, w)
 }

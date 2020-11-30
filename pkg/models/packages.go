@@ -26,18 +26,20 @@ func (p Package) ModelToEntity() entities.Package {
 
 type PackageType struct {
 	gorm.Model
-	Name         string
-	Description  string
-	Manufacturer string
-	ProductCode  string
+	Name          string
+	Description   string
+	Manufacturer  string
+	ProductCode   string
+	DepositAmount float64
 }
 
 func (p PackageType) ModelToEntity() entities.PackageType {
 	return entities.PackageType{
-		ID:           p.ID,
-		Name:         p.Name,
-		Description:  p.Description,
-		Manufacturer: p.Manufacturer,
-		ProductCode:  p.ProductCode,
+		ID:            p.ID,
+		Name:          p.Name,
+		Description:   p.Description,
+		Manufacturer:  p.Manufacturer,
+		ProductCode:   p.ProductCode,
+		DepositAmount: p.DepositAmount,
 	}
 }

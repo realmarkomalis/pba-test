@@ -10,6 +10,8 @@ type Restaurant struct {
 	Name              string
 	User              User
 	UserID            uint
+	DropOffPoint      DropOffPoint
+	DropOffPointID    uint
 	Latitude          float64
 	Longitude         float64
 	PostalCode        string
@@ -25,6 +27,7 @@ func (r Restaurant) ModelToEntity() entities.Restaurant {
 		ID:                r.ID,
 		Name:              r.Name,
 		User:              r.User.ModelToEntity(),
+		DropOffPoint:      r.DropOffPoint.ModelToEntity(),
 		Latitude:          r.Latitude,
 		Longitude:         r.Longitude,
 		PostalCode:        r.PostalCode,
