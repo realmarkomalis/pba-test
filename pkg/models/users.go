@@ -30,6 +30,7 @@ func (u User) ModelToEntity() entities.User {
 		LastName:      u.LastName,
 		Email:         u.Email,
 		PhoneNumber:   u.PhoneNumber,
+		IBAN:          u.IBAN,
 		UserAddresses: uas,
 		UserRole:      u.UserRole.ModelToEntity(),
 	}

@@ -11,6 +11,7 @@ type IReturnRepository interface {
 	GetReturn(returnID uint) (*entities.Return, error)
 	GetReturns(packageID uint) ([]*entities.Return, error)
 	GetActiveReturns(packageID uint) ([]*entities.Return, error)
+	SetReturnStatus(returnID uint, status models.ReturnStatus) (*entities.Return, error)
 
 	CreateReturn(packageID uint) (*entities.Return, error)
 	CreatePackageSupply(returnID, userID, restaurantID uint) (*entities.Return, error)
@@ -19,6 +20,7 @@ type IReturnRepository interface {
 	CreatePackagePickup(returnID, userID uint) (*entities.Return, error)
 
 	GetAllPackageDispatches() ([]*entities.Return, error)
+	GetAllPackageSupplies() ([]*entities.Return, error)
 	GetPackageDispatches(userID uint) ([]*entities.Return, error)
 	GetPackagePickups(userID uint) ([]*entities.Return, error)
 	GetReturnRequests(userID uint) ([]*entities.Return, error)
@@ -32,6 +34,7 @@ func (r ReturnRepository) GetReturn(returnID uint) (*entities.Return, error) {
 	rs := models.Return{}
 	err := r.DB.
 		Preload("Package").
+		Preload("Package.PackageType").
 		Where("id = ?", returnID).
 		First(&rs).
 		Error
@@ -47,6 +50,7 @@ func (r ReturnRepository) GetReturn(returnID uint) (*entities.Return, error) {
 			ID:          rs.Package.ID,
 			Name:        rs.Package.Name,
 			PackageCode: rs.Package.PackageCode,
+			PackageType: rs.Package.PackageType.ModelToEntity(),
 		},
 		CreatedAt: rs.CreatedAt,
 	}, nil
@@ -86,6 +90,7 @@ func (r ReturnRepository) GetActiveReturns(packageID uint) ([]*entities.Return, 
 	err := r.DB.
 		Where("package_id = ?", packageID).
 		Not(&models.Return{Status: models.Fulfilled}).
+		Not(&models.Return{Status: models.Collected}).
 		Find(&rs).
 		Error
 
@@ -116,27 +121,25 @@ func (r ReturnRepository) CreateReturn(packageID uint) (*entities.Return, error)
 		Status:    models.Created,
 		PackageID: packageID,
 	}
-	err := r.DB.Create(&ret).Related(&pack).Error
+	err := r.DB.
+		Create(&ret).
+		Related(&pack).
+		Error
 	if err != nil {
 		return nil, err
 	}
 
 	return &entities.Return{
-		ID:     ret.ID,
-		Status: ret.Status.String(),
-		Package: entities.Package{
-			ID:          pack.ID,
-			Name:        pack.Name,
-			PackageCode: pack.PackageCode,
-		},
+		ID:        ret.ID,
+		Status:    ret.Status.String(),
+		Package:   pack.ModelToEntity(),
 		CreatedAt: ret.CreatedAt,
 	}, nil
 }
 
-func (r ReturnRepository) CreatePackageSupply(returnID, userID, restaurantID uint) (*entities.Return, error) {
+func (r ReturnRepository) SetReturnStatus(returnID uint, status models.ReturnStatus) (*entities.Return, error) {
 	ret := models.Return{}
 	err := r.DB.
-		Preload("Package").
 		Where("id = ?", returnID).
 		First(&ret).
 		Error
@@ -145,34 +148,17 @@ func (r ReturnRepository) CreatePackageSupply(returnID, userID, restaurantID uin
 		return nil, err
 	}
 
-	ps := models.PackageSupply{
-		UserID:       userID,
-		ReturnID:     ret.ID,
-		RestaurantID: restaurantID,
-	}
-	err = r.DB.
-		Create(&ps).
-		Error
-	if err != nil {
-		return nil, err
-	}
-
 	err = r.DB.Model(&ret).
 		Updates(models.Return{
-			Status: models.Created,
+			Status: status,
 		}).
 		Error
 	if err != nil {
 		return nil, err
 	}
 
-	// ret.PackageSupply = ps
-	return &entities.Return{
-		ID:        ret.ID,
-		Status:    ret.Status.String(),
-		Package:   ret.Package.ModelToEntity(),
-		CreatedAt: ret.CreatedAt,
-	}, nil
+	rt := ret.ModelToEntity()
+	return &rt, nil
 }
 
 func (r ReturnRepository) CreatePackageDispatch(returnID, userID uint) (*entities.Return, error) {

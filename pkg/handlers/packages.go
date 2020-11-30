@@ -9,6 +9,7 @@ import (
 	"github.com/jinzhu/gorm"
 
 	"gitlab.com/markomalis/packback-api/pkg/entities"
+	"gitlab.com/markomalis/packback-api/pkg/repositories"
 	"gitlab.com/markomalis/packback-api/pkg/services"
 )
 
@@ -18,6 +19,24 @@ type PackagesHandler struct {
 
 type getPackageCodeResponse struct {
 	Code string `json:"code"`
+}
+
+func (h PackagesHandler) GetPackage(w http.ResponseWriter, r *http.Request) {
+	pr := repositories.PackagesRepository{DB: h.DB}
+
+	id, err := strconv.ParseUint(mux.Vars(r)["package_id"], 10, 64)
+	p, err := pr.GetPackage(uint(id))
+	if err != nil {
+		writeErrorResponse([]entities.APIError{
+			{
+				Message: err.Error(),
+				Code:    "0",
+			},
+		}, http.StatusNotFound, w)
+		return
+	}
+
+	writeSuccesResponse(p, w)
 }
 
 func (h PackagesHandler) GetPackageCode(w http.ResponseWriter, r *http.Request) {

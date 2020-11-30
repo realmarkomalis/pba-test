@@ -8,6 +8,6 @@ type APIError struct {
 	Link    string `json:"link"`
 }
 
-func (e *APIError) Error() string {
+func (e APIError) Error() string {
 	return fmt.Sprintf("API Error: %s, for more info visit: %s", e.Message, e.Link)
 }
