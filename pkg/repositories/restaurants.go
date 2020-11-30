@@ -50,3 +50,26 @@ func (r RestaurantsRepository) GetRestaurant(userID uint) (*entities.Restaurant,
 	restaurant := rs.ModelToEntity()
 	return &restaurant, nil
 }
+
+func (r RestaurantsRepository) GetUserRestaurants(userID uint) ([]entities.Restaurant, error) {
+	rs := []models.Restaurant{}
+
+	err := r.DB.
+		Model(&rs).
+		Where("user_id = ?", userID).
+		Preload("User").
+		Preload("DropOffPoint").
+		Find(&rs).
+		Error
+	if err != nil {
+		return nil, err
+	}
+
+	restaurants := []entities.Restaurant{}
+	for _, rest := range rs {
+		r := rest.ModelToEntity()
+		restaurants = append(restaurants, r)
+	}
+
+	return restaurants, nil
+}

@@ -58,6 +58,28 @@ func (u DropOffCollectUsecases) CreateDropOffCollect(userID, packageID, dropOffP
 }
 
 func (u DropOffCollectUsecases) CreateDropOffCollectAndSupply(userID, packageID, dropOffPointID uint) (*entities.DropOffCollect, error) {
+	restos, err := u.RestaurantsRepository.GetUserRestaurants(userID)
+	if err != nil {
+		return nil, entities.APIError{
+			Message: err.Error(),
+			Code:    "0",
+		}
+	}
+
+	var resto *entities.Restaurant = nil
+	for _, r := range restos {
+		if r.DropOffPoint.ID == dropOffPointID {
+			resto = &r
+		}
+	}
+
+	if resto == nil {
+		return nil, entities.APIError{
+			Message: "User is not allowed to collect and supply for this drop-off point.",
+			Code:    "0",
+		}
+	}
+
 	dc, err := u.CreateDropOffCollect(userID, packageID, dropOffPointID)
 	if err != nil {
 		return nil, entities.APIError{
@@ -67,14 +89,6 @@ func (u DropOffCollectUsecases) CreateDropOffCollectAndSupply(userID, packageID,
 	}
 
 	r, err := u.ReturnsRepository.CreateReturn(packageID)
-	if err != nil {
-		return nil, entities.APIError{
-			Message: err.Error(),
-			Code:    "0",
-		}
-	}
-
-	resto, err := u.RestaurantsRepository.GetRestaurant(userID)
 	if err != nil {
 		return nil, entities.APIError{
 			Message: err.Error(),

@@ -16,8 +16,12 @@ func InitializeRoutes(r *mux.Router, db *gorm.DB) {
 	MeHandler := handlers.MeHandler{DB: db}
 	meRouter := restAPIRouter.PathPrefix("/me").Subrouter()
 	meRouter.Use(middleware.AuthMiddleware)
-	meRouter.HandleFunc("/", MeHandler.GetMe).Methods(http.MethodGet, http.MethodOptions)
-	meRouter.HandleFunc("/qr-codes/", MeHandler.GetMyQR).Methods(http.MethodGet, http.MethodOptions)
+	meRouter.HandleFunc("/", MeHandler.GetMe).
+		Methods(http.MethodGet, http.MethodOptions)
+	meRouter.HandleFunc("/", MeHandler.UpdateMe).
+		Methods(http.MethodPut, http.MethodOptions)
+	meRouter.HandleFunc("/qr-codes/", MeHandler.GetMyQR).
+		Methods(http.MethodGet, http.MethodOptions)
 
 	LoginRequestsHandler := handlers.LoginRequestsHandler{DB: db}
 	restAPIRouter.HandleFunc("/login-requests/", LoginRequestsHandler.Create).Methods(http.MethodPost, http.MethodOptions)
@@ -126,4 +130,23 @@ func InitializeRoutes(r *mux.Router, db *gorm.DB) {
 	packageCyclesRouter.
 		HandleFunc("/{package_id:[0-9]+}/cycles/", pch.GetPackageCycles).
 		Methods(http.MethodGet, http.MethodOptions)
+
+	dph := handlers.DepositsHandler{DB: db}
+	depositsRouter := restAPIRouter.PathPrefix("/deposit-items").Subrouter()
+	depositsRouter.Use(middleware.AuthMiddleware)
+	depositsRouter.
+		HandleFunc("/", dph.GetUserDepositItems).
+		Methods(http.MethodGet, http.MethodOptions)
+
+	customerDepositPayoutsRouter := restAPIRouter.PathPrefix("/customer-deposit-payouts").Subrouter()
+	customerDepositPayoutsRouter.Use(middleware.AuthMiddleware)
+	customerDepositPayoutsRouter.
+		HandleFunc("/", dph.CreateCustomerDepositPayout).
+		Methods(http.MethodPost, http.MethodOptions)
+	customerDepositPayoutsRouter.
+		HandleFunc("/", dph.ListCustomerDepositPayouts).
+		Methods(http.MethodGet, http.MethodOptions)
+	customerDepositPayoutsRouter.
+		HandleFunc("/", dph.UpdateCustomerDepositPayout).
+		Methods(http.MethodPut, http.MethodOptions)
 }

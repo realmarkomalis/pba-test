@@ -49,6 +49,7 @@ func (ur UserRepository) GetByEmail(email string) (*entities.User, error) {
 		FirstName:   user.FirstName,
 		LastName:    user.LastName,
 		PhoneNumber: user.PhoneNumber,
+		IBAN:        user.IBAN,
 		UserRole: entities.UserRole{
 			Name:     role.Name,
 			SystemID: role.SystemID,
@@ -93,6 +94,7 @@ func (ur UserRepository) UpdateUser(u *entities.User) (*entities.User, error) {
 			LastName:    u.LastName,
 			Email:       u.Email,
 			PhoneNumber: u.PhoneNumber,
+			IBAN:        u.IBAN,
 		}).
 		Error
 	if err != nil {
@@ -105,6 +107,7 @@ func (ur UserRepository) UpdateUser(u *entities.User) (*entities.User, error) {
 		LastName:    user.LastName,
 		Email:       user.Email,
 		PhoneNumber: user.PhoneNumber,
+		IBAN:        user.IBAN,
 		UserRole: entities.UserRole{
 			Name:     user.UserRole.Name,
 			SystemID: user.UserRole.SystemID,

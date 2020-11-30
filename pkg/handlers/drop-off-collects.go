@@ -40,7 +40,7 @@ func (h DropOffCollectsHandler) CreateDropOffCollect(w http.ResponseWriter, r *h
 
 	var dc *entities.DropOffCollect
 	var err error
-	if u.UserRole.Name == "restaurant" {
+	if u.UserRole.Name == "closed_loop_restaurant" {
 		dc, err = du.CreateDropOffCollectAndSupply(u.ID, b.PackageID, b.DropOffPointID)
 	} else if u.UserRole.Name == "package_supplier" {
 		dc, err = du.CreateDropOffCollect(u.ID, b.PackageID, b.DropOffPointID)

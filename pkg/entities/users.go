@@ -6,6 +6,7 @@ type User struct {
 	FirstName     string        `json:"first_name"`
 	LastName      string        `json:"last_name"`
 	PhoneNumber   string        `json:"phonenumber"`
+	IBAN          string        `json:"iban"`
 	UserAddresses []UserAddress `json:"user_addresses"`
 	UserRole      UserRole      `json:"user_role"`
 	Token         string        `json:"token"`
