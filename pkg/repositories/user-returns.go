@@ -76,6 +76,7 @@ func (r UserReturnRepository) GetUserReturnEntries(userID uint) ([]*entities.Use
 		Preload("User").
 		Preload("Returns").
 		Preload("Returns.Package").
+		Preload("Returns.Package.PackageType").
 		Where("user_id = ?", userID).
 		Find(&urs).
 		Error
@@ -125,6 +126,7 @@ func (r UserReturnRepository) GetScheduledReturnEntries() ([]*entities.UserRetur
 		Model(&rr).
 		Preload("Returns").
 		Preload("Returns.Package").
+		Preload("Returns.Package.PackageType").
 		Preload("User").
 		Preload("User.UserAddresses").
 		Preload("User.UserRole").
