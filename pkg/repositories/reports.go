@@ -138,11 +138,11 @@ func (r ReportsRepository) getReturnRate(rIDs []uint, startInterval, endInterval
 		rd := ReturnRateData{}
 		rows.Scan(&rd.status, &rd.count)
 		if rd.status == models.Collected || rd.status == models.Fulfilled {
-			returned++
+			returned = returned + rd.count
 		} else {
-			notReturned++
+			notReturned = notReturned + rd.count
 		}
-		total++
+		total = total + rd.count
 	}
 
 	return total, returned, notReturned, nil
@@ -160,11 +160,11 @@ func (r ReportsRepository) getSupplierReturnRate(rIDs []uint, userID uint, start
 		rd := ReturnRateData{}
 		rows.Scan(&rd.status, &rd.count)
 		if rd.status == models.Collected || rd.status == models.Fulfilled {
-			returned++
+			returned = returned + rd.count
 		} else {
-			notReturned++
+			notReturned = notReturned + rd.count
 		}
-		total++
+		total = total + rd.count
 	}
 
 	return total, returned, notReturned, nil
@@ -366,34 +366,23 @@ func (r ReportsRepository) getSupplierRestaurantReturnsInPeriod(rIDs []uint, use
 	return rts, nil
 }
 
-const RETURNS_IN_PERIOD_QUERY = `
-    SELECT id, status
-    FROM package_supplies
-    JOIN returns on returns.id = package_supplies.return_id
-    JOIN packages on packages.id = returns.package_id
-    JOIN package_types on package_types.id = packages.package_type_id
-    WHERE package_supplies.restaurant_id in (?)
-    AND package_supplies.created_at BETWEEN ?::timestamp AND ?::timestamp;
-`
-
 const RETURN_RATE_QUERY = `
     SELECT status, COUNT(status)
     FROM package_supplies
     JOIN returns on returns.id = package_supplies.return_id
     WHERE package_supplies.restaurant_id in (?)
-    AND returns.status != 0
     AND package_supplies.created_at BETWEEN ?::timestamp AND ?::timestamp
     GROUP BY status;
 `
 
 const SUPPLIER_RETURN_RATE_QUERY = `
-    SELECT status, return_id, restaurant_id
+    SELECT status, COUNT(status)
     FROM package_supplies
     JOIN returns on returns.id = package_supplies.return_id
     WHERE package_supplies.restaurant_id in (?)
     AND package_supplies.user_id = ?
-    AND returns.status != 0
-    AND package_supplies.created_at BETWEEN ?::timestamp AND ?::timestamp;
+    AND package_supplies.created_at BETWEEN ?::timestamp AND ?::timestamp
+    GROUP BY status;
 `
 
 const AVERAGE_LOOPS_PER_PACKAGE_QUERY = `
