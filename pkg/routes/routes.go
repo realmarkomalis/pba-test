@@ -98,8 +98,11 @@ func InitializeRoutes(r *mux.Router, db *gorm.DB) {
 	reportsRouter.Use(middleware.AuthMiddleware)
 	rph := handlers.ReportsHandler{DB: db}
 	reportsRouter.
-		HandleFunc("/", rph.StatusesPerRestaurant).
+		HandleFunc("/restaurants/", rph.ListReportableRestaurants).
 		Methods(http.MethodGet, http.MethodOptions)
+	reportsRouter.
+		HandleFunc("/restaurants/", rph.GetRestaurantReport).
+		Methods(http.MethodPost, http.MethodOptions)
 
 	dih := handlers.DropOffIntentsHandler{DB: db}
 	dropOffIntentsRouter := restAPIRouter.PathPrefix("/drop-off-intents/").Subrouter()
