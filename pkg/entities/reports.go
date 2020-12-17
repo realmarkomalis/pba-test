@@ -15,6 +15,6 @@ type SupplierReport struct {
 	NotReturned  int      `json:"notReturned"`
 	TotalCycles  int      `json:"totalCycles"`
 	Supplied     int      `json:"supplied"`
-	AverageLoops int      `json:"averageLoops"`
+	AverageLoops float64  `json:"averageLoops"`
 	Returns      []Return `json:"returns"`
 }
