@@ -15,7 +15,7 @@ type RestaurantsRepository struct {
 	DB *gorm.DB
 }
 
-func (r RestaurantsRepository) GetRestaurants() ([]*entities.Restaurant, error) {
+func (r RestaurantsRepository) GetRestaurants() ([]entities.Restaurant, error) {
 	rs := []models.Restaurant{}
 
 	err := r.DB.
@@ -26,10 +26,10 @@ func (r RestaurantsRepository) GetRestaurants() ([]*entities.Restaurant, error) 
 		return nil, err
 	}
 
-	restaurants := []*entities.Restaurant{}
+	restaurants := []entities.Restaurant{}
 	for _, rest := range rs {
 		r := rest.ModelToEntity()
-		restaurants = append(restaurants, &r)
+		restaurants = append(restaurants, r)
 	}
 
 	return restaurants, nil

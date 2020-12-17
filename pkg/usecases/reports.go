@@ -28,6 +28,15 @@ func (r ReportsUsecase) GetUsersRestaurants(userID uint) ([]entities.Restaurant,
 	return rs, nil
 }
 
+func (r ReportsUsecase) GetAdminRestaurants() ([]entities.Restaurant, error) {
+	rs, err := r.RestaurantsRepository.GetRestaurants()
+	if err != nil {
+		return nil, err
+	}
+
+	return rs, nil
+}
+
 func (r ReportsUsecase) GetSupplierTotalsReport(userID uint, startInterval, endInterval string) (*entities.SupplierReport, error) {
 	rs, err := r.RestaurantsRepository.GetSupplierRestaurants(userID)
 	if err != nil {
@@ -35,6 +44,20 @@ func (r ReportsUsecase) GetSupplierTotalsReport(userID uint, startInterval, endI
 	}
 
 	rp, err := r.ReportsRepository.SupplierTotalsReport(rs, userID, startInterval, endInterval)
+	if err != nil {
+		return nil, err
+	}
+
+	return rp, nil
+}
+
+func (r ReportsUsecase) GetAdminTotalsReport(userID uint, startInterval, endInterval string) (*entities.SupplierReport, error) {
+	rs, err := r.RestaurantsRepository.GetRestaurants()
+	if err != nil {
+		return nil, err
+	}
+
+	rp, err := r.ReportsRepository.AdminTotalsReport(rs, startInterval, endInterval)
 	if err != nil {
 		return nil, err
 	}
