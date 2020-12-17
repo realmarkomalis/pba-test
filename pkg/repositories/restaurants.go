@@ -20,6 +20,7 @@ func (r RestaurantsRepository) GetRestaurants() ([]entities.Restaurant, error) {
 
 	err := r.DB.
 		Model(&rs).
+		Preload("DropOffPoint").
 		Find(&rs).
 		Error
 	if err != nil {
@@ -41,6 +42,7 @@ func (r RestaurantsRepository) GetRestaurant(rID uint) (*entities.Restaurant, er
 	err := r.DB.
 		Model(&rs).
 		Where("id = ?", rID).
+		Preload("DropOffPoint").
 		First(&rs).
 		Error
 	if err != nil {
@@ -81,6 +83,7 @@ func (r RestaurantsRepository) GetSupplierRestaurants(userID uint) ([]entities.R
 		Model(&ps).
 		Where("user_id = ?", userID).
 		Preload("Restaurant").
+		Preload("Restaurant.DropOffPoint").
 		Find(&ps).
 		Error
 	if err != nil {
