@@ -435,7 +435,7 @@ const AVERAGE_LOOPS_PER_PACKAGE_QUERY = `
     SELECT COUNT(returns.status), returns.status, returns.package_id
     FROM package_supplies
     JOIN "returns" on returns.id = package_supplies.return_id
-    AND package_supplies.user_id = ?
+    WHERE package_supplies.user_id = ?
     GROUP BY returns.package_id, returns.status;
 `
 

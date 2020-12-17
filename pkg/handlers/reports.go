@@ -15,7 +15,7 @@ type ReportsHandler struct {
 
 func (h *ReportsHandler) ListReportableRestaurants(w http.ResponseWriter, r *http.Request) {
 	user := getUserFromRequestContext(r, w)
-	if user.UserRole.Name != "package_supplier" && user.UserRole.Name != "restaurant" && user.UserRole.Name != "closed_loop_restaurant" {
+	if user.UserRole.Name != "admin" && user.UserRole.Name != "package_supplier" && user.UserRole.Name != "restaurant" && user.UserRole.Name != "closed_loop_restaurant" {
 		writeErrorResponse([]entities.APIError{}, http.StatusForbidden, w)
 		return
 	}
@@ -23,6 +23,22 @@ func (h *ReportsHandler) ListReportableRestaurants(w http.ResponseWriter, r *htt
 	u := usecases.ReportsUsecase{
 		ReportsRepository:     repositories.ReportsRepository{DB: h.DB},
 		RestaurantsRepository: repositories.RestaurantsRepository{DB: h.DB},
+	}
+
+	if user.UserRole.Name == "admin" {
+		rs, err := u.GetAdminRestaurants()
+		if err != nil {
+			writeErrorResponse([]entities.APIError{
+				{
+					Message: err.Error(),
+					Code:    "",
+				},
+			}, http.StatusBadRequest, w)
+			return
+		}
+
+		writeSuccesResponse(rs, w)
+		return
 	}
 
 	if user.UserRole.Name == "package_supplier" {
@@ -67,7 +83,7 @@ type getReportsRequestBody struct {
 
 func (h *ReportsHandler) GetRestaurantReport(w http.ResponseWriter, r *http.Request) {
 	user := getUserFromRequestContext(r, w)
-	if user.UserRole.Name != "package_supplier" && user.UserRole.Name != "restaurant" && user.UserRole.Name != "closed_loop_restaurant" {
+	if user.UserRole.Name != "admin" && user.UserRole.Name != "package_supplier" && user.UserRole.Name != "restaurant" && user.UserRole.Name != "closed_loop_restaurant" {
 		writeErrorResponse([]entities.APIError{}, http.StatusForbidden, w)
 		return
 	}
@@ -82,13 +98,45 @@ func (h *ReportsHandler) GetRestaurantReport(w http.ResponseWriter, r *http.Requ
 		RestaurantsRepository: repositories.RestaurantsRepository{DB: h.DB},
 	}
 
-	if user.UserRole.Name != "package_supplier" && b.RestaurantID == 0 {
+	if user.UserRole.Name != "package_supplier" && user.UserRole.Name != "admin" && b.RestaurantID == 0 {
 		writeErrorResponse([]entities.APIError{
 			{
 				Message: "Call only allowed for package suppliers",
 				Code:    "1",
 			},
 		}, http.StatusForbidden, w)
+		return
+	}
+
+	if user.UserRole.Name == "admin" && b.RestaurantID == 0 {
+		rp, err := u.GetAdminTotalsReport(user.ID, b.StartInterval, b.EndInterval)
+		if err != nil {
+			writeErrorResponse([]entities.APIError{
+				{
+					Message: err.Error(),
+					Code:    "2",
+				},
+			}, http.StatusBadRequest, w)
+			return
+		}
+
+		writeSuccesResponse(rp, w)
+		return
+	}
+
+	if user.UserRole.Name == "admin" && b.RestaurantID != 0 {
+		rp, err := u.GetRestaurantReport(user.ID, b.RestaurantID, b.StartInterval, b.EndInterval)
+		if err != nil {
+			writeErrorResponse([]entities.APIError{
+				{
+					Message: err.Error(),
+					Code:    "3",
+				},
+			}, http.StatusBadRequest, w)
+			return
+		}
+
+		writeSuccesResponse(rp, w)
 		return
 	}
 
