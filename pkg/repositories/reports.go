@@ -123,7 +123,53 @@ func (r ReportsRepository) SupplierTotalsReport(rs []entities.Restaurant, userID
 	}
 	report.Returns = rts
 
+	al, err := r.getSupplierAverageLoops(userID)
+	if err != nil {
+		return nil, err
+	}
+	report.AverageLoops = al
+
 	return &report, nil
+}
+
+type averageLoopsData struct {
+	count     int
+	status    models.ReturnStatus
+	packageID uint
+}
+
+func (r ReportsRepository) getSupplierAverageLoops(userID uint) (float64, error) {
+	rows, err := r.DB.Raw(AVERAGE_LOOPS_PER_PACKAGE_QUERY, userID).Rows()
+	if err != nil {
+		return 0, err
+	}
+	defer rows.Close()
+
+	total, returned, notReturned := 0, 0, 0
+	for rows.Next() {
+		rd := averageLoopsData{}
+		rows.Scan(&rd.count, &rd.status, &rd.packageID)
+		if rd.status == models.Collected || rd.status == models.Fulfilled {
+			returned = returned + rd.count
+		} else {
+			notReturned = notReturned + rd.count
+		}
+		total = total + rd.count
+	}
+
+	rows, err = r.DB.Raw(UNIQUE_PACKAGES_FOR_SUPPLIER_QUERY, userID).Rows()
+	if err != nil {
+		return 0, err
+	}
+	defer rows.Close()
+
+	up := 0
+	for rows.Next() {
+		rows.Scan(&up)
+	}
+
+	average := float64(total) / float64(up)
+	return average, nil
 }
 
 func (r ReportsRepository) getReturnRate(rIDs []uint, startInterval, endInterval string) (int, int, int, error) {
@@ -387,9 +433,19 @@ const SUPPLIER_RETURN_RATE_QUERY = `
 
 const AVERAGE_LOOPS_PER_PACKAGE_QUERY = `
     SELECT COUNT(returns.status), returns.status, returns.package_id
-    FROM returns
+    FROM package_supplies
+    JOIN "returns" on returns.id = package_supplies.return_id
+    AND package_supplies.user_id = ?
     GROUP BY returns.package_id, returns.status;
 `
+
+const UNIQUE_PACKAGES_FOR_SUPPLIER_QUERY = `
+    SELECT COUNT(DISTINCT returns.package_id)
+    FROM package_supplies
+    JOIN "returns" on returns.id = package_supplies.return_id
+    WHERE package_supplies.user_id = ?;
+`
+
 const SUPPLIES_IN_PERIOD = `
     SELECT count(*)
     FROM package_supplies
