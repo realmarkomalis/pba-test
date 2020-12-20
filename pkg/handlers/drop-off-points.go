@@ -56,3 +56,32 @@ func (h DropOffPointsHandler) ListDropOffPoints(w http.ResponseWriter, r *http.R
 
 	writeSuccesResponse(dops, w)
 }
+
+func (h DropOffPointsHandler) ListMyDropOffPoints(w http.ResponseWriter, r *http.Request) {
+	user := getUserFromRequestContext(r, w)
+	if user == nil {
+		writeErrorResponse([]entities.APIError{}, http.StatusForbidden, w)
+		return
+	}
+
+	rr := repositories.RestaurantsRepository{DB: h.DB}
+	rs, err := rr.GetUserRestaurants(user.ID)
+	if err != nil {
+		writeErrorResponse([]entities.APIError{
+			{
+				Message: err.Error(),
+				Code:    "0",
+			},
+		}, http.StatusInternalServerError, w)
+		return
+	}
+
+	dops := []entities.DropOffPoint{}
+	for _, r := range rs {
+		if r.DropOffPoint.ID != 0 {
+			dops = append(dops, r.DropOffPoint)
+		}
+	}
+
+	writeSuccesResponse(dops, w)
+}
