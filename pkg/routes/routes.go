@@ -23,6 +23,9 @@ func InitializeRoutes(r *mux.Router, db *gorm.DB) {
 	meRouter.HandleFunc("/qr-codes/", MeHandler.GetMyQR).
 		Methods(http.MethodGet, http.MethodOptions)
 
+	myRouter := restAPIRouter.PathPrefix("/my").Subrouter()
+	myRouter.Use(middleware.AuthMiddleware)
+
 	LoginRequestsHandler := handlers.LoginRequestsHandler{DB: db}
 	restAPIRouter.HandleFunc("/login-requests/", LoginRequestsHandler.Create).Methods(http.MethodPost, http.MethodOptions)
 
@@ -112,6 +115,8 @@ func InitializeRoutes(r *mux.Router, db *gorm.DB) {
 		Methods(http.MethodPost, http.MethodOptions)
 
 	doh := handlers.DropOffPointsHandler{DB: db}
+	myRouter.HandleFunc("/drop-off-points/", doh.ListMyDropOffPoints).
+		Methods(http.MethodGet, http.MethodOptions)
 	dropOffPointsRouter := restAPIRouter.PathPrefix("/drop-off-points/").Subrouter()
 	dropOffPointsRouter.
 		HandleFunc("/", doh.ListDropOffPoints).
