@@ -16,4 +16,5 @@ type PackageType struct {
 	Manufacturer  string  `json:"manufacturer"`
 	ProductCode   string  `json:"product_code"`
 	DepositAmount float64 `json:"deposit_amount"`
+	ImageURL      string  `json:"image_url"`
 }
