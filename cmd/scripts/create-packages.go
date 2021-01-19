@@ -33,6 +33,7 @@ func main() {
 func createPackage(db *gorm.DB, i int) {
 	p := models.Package{
 		Name: fmt.Sprintf("Packie %d", i),
+		PackageTypeID: 4,
 	}
 	db.Create(&p)
 }
