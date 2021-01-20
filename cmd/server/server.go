@@ -95,7 +95,7 @@ func main() {
 	db.Model(&models.CustomerDepositPayout{}).AddForeignKey("paying_user_id", "users(id)", "RESTRICT", "RESTRICT")
 
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://127.0.0.1:8080", "https://packback.app", "https://develop.packback.app"},
+		AllowedOrigins:   viper.GetStringSlice("allowed_origins"),
 		AllowCredentials: true,
 		AllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodOptions},
 		AllowedHeaders:   []string{"Content-Type", "X-Packback-Auth"},
