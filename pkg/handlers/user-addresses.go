@@ -21,6 +21,7 @@ type createAddressBody struct {
 	HouseNumberSuffix string `json:"house_number_suffix" valid:"type(string),optional"`
 	City              string `json:"city" valid:"type(string),stringlength(2|100)"`
 	PhoneNumber       string `json:"phonenumber" valid:"type(string),optional"`
+	IBAN              string `json:"iban" valid:"type(string),optional"`
 }
 
 func (h UserAddressesHandler) CreateUserAddress(w http.ResponseWriter, r *http.Request) {
@@ -56,6 +57,7 @@ func (h UserAddressesHandler) CreateUserAddress(w http.ResponseWriter, r *http.R
 		FirstName:   a.FirstName,
 		LastName:    a.LastName,
 		PhoneNumber: a.PhoneNumber,
+		IBAN:        a.IBAN,
 	})
 	if err != nil {
 		writeErrorResponse([]entities.APIError{
@@ -99,9 +101,11 @@ func (h UserAddressesHandler) UpdateUserAddress(w http.ResponseWriter, r *http.R
 
 	ur := repositories.UserRepository{DB: h.DB}
 	_, err = ur.UpdateUser(&entities.User{
-		ID:        user.ID,
-		FirstName: a.FirstName,
-		LastName:  a.LastName,
+		ID:          user.ID,
+		FirstName:   a.FirstName,
+		LastName:    a.LastName,
+		PhoneNumber: a.PhoneNumber,
+		IBAN:        a.IBAN,
 	})
 	if err != nil {
 		writeErrorResponse([]entities.APIError{
