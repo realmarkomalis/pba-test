@@ -30,6 +30,7 @@ func main() {
 		log.Fatalf("Could not connect to the database %s", err)
 	}
 	defer db.Close()
+	// db.LogMode(true)
 
 	r := mux.NewRouter()
 	routes.InitializeRoutes(r, db)

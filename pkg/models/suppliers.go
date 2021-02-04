@@ -6,7 +6,8 @@ import (
 
 type Supplier struct {
 	gorm.Model
-	Name   string
-	User   User
-	UserID uint
+	Name         string
+	User         User
+	UserID       uint
+	PackageTypes []PackageType
 }

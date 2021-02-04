@@ -44,11 +44,23 @@ func InitializeRoutes(r *mux.Router, db *gorm.DB) {
 	packagesHandler := handlers.PackagesHandler{DB: db}
 	packagesRouter := restAPIRouter.PathPrefix("/packages").Subrouter()
 	packagesRouter.
-		HandleFunc("/{package_id:[0-9]+}/", packagesHandler.GetPackage).
+		HandleFunc("/{package_id}/", packagesHandler.GetPackage).
+		Methods(http.MethodGet, http.MethodOptions)
+
+	packageTypesHandler := handlers.PackageTypesHandler{DB: db}
+	packageTypesRouter := restAPIRouter.PathPrefix("/package-types").Subrouter()
+	packageTypesRouter.Use(middleware.AuthMiddleware)
+	packageTypesRouter.
+		HandleFunc("/", packageTypesHandler.GetPackageTypes).
 		Methods(http.MethodGet, http.MethodOptions)
 
 	packageReturnsRouter := restAPIRouter.PathPrefix("/packages").Subrouter()
 	packageReturnsRouter.Use(middleware.AuthMiddleware)
+
+	packageReturnsRouter.
+		HandleFunc("/", packagesHandler.CreateOrUpdatePackage).
+		Methods(http.MethodPut, http.MethodOptions)
+
 	// packageReturnsRouter.HandleFunc("/{id:[0-9]+}/package-dispatches/", ReturnsRequestsHandler.GetReturns).Methods(http.MethodPost, http.MethodOptions)
 	// packageReturnsRouter.HandleFunc("/{id:[0-9]+}/pickup-requests/", ReturnsRequestsHandler.CreateReturnRequest).Methods(http.MethodPost, http.MethodOptions)
 	packageReturnsRouter.

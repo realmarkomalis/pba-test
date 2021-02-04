@@ -32,6 +32,8 @@ type PackageType struct {
 	ProductCode   string
 	DepositAmount float64
 	ImageURL      string
+	SupplierID    uint
+	Supplier
 }
 
 func (p PackageType) ModelToEntity() entities.PackageType {
