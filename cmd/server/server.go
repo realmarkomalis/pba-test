@@ -14,6 +14,7 @@ import (
 
 	"gitlab.com/markomalis/packback-api/pkg/models"
 	"gitlab.com/markomalis/packback-api/pkg/routes"
+	"gitlab.com/markomalis/packback-api/scripts/jobs"
 )
 
 func main() {
@@ -31,6 +32,8 @@ func main() {
 	}
 	defer db.Close()
 	// db.LogMode(true)
+
+	jobs.InitJobs(db)
 
 	r := mux.NewRouter()
 	routes.InitializeRoutes(r, db)
