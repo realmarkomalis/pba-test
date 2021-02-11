@@ -20,6 +20,7 @@ type Restaurant struct {
 	HouseNumberSuffix string
 	City              string
 	Country           string
+	Deactivated       bool `gorm:"default:false"`
 }
 
 func (r Restaurant) ModelToEntity() entities.Restaurant {
@@ -36,5 +37,6 @@ func (r Restaurant) ModelToEntity() entities.Restaurant {
 		HouseNumberSuffix: r.HouseNumberSuffix,
 		City:              r.City,
 		Country:           r.Country,
+		Deactivated:       r.Deactivated,
 	}
 }

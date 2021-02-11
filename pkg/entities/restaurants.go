@@ -13,4 +13,5 @@ type Restaurant struct {
 	HouseNumberSuffix string       `json:"house_number_suffix"`
 	City              string       `json:"city"`
 	Country           string       `json:"country"`
+	Deactivated       bool         `json:"deactivated"`
 }

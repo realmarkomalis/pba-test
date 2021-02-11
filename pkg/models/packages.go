@@ -45,5 +45,6 @@ func (p PackageType) ModelToEntity() entities.PackageType {
 		ProductCode:   p.ProductCode,
 		DepositAmount: p.DepositAmount,
 		ImageURL:      p.ImageURL,
+		Supplier:      p.Supplier.ModelToEntity(),
 	}
 }

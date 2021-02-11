@@ -10,11 +10,12 @@ type Package struct {
 }
 
 type PackageType struct {
-	ID            uint    `json:"id"`
-	Name          string  `json:"name"`
-	Description   string  `json:"description"`
-	Manufacturer  string  `json:"manufacturer"`
-	ProductCode   string  `json:"product_code"`
-	DepositAmount float64 `json:"deposit_amount"`
-	ImageURL      string  `json:"image_url"`
+	ID            uint     `json:"id"`
+	Name          string   `json:"name"`
+	Description   string   `json:"description"`
+	Manufacturer  string   `json:"manufacturer"`
+	ProductCode   string   `json:"product_code"`
+	DepositAmount float64  `json:"deposit_amount"`
+	ImageURL      string   `json:"image_url"`
+	Supplier      Supplier `json:"supplier"`
 }

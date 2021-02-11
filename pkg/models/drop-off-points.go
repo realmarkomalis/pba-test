@@ -16,6 +16,7 @@ type DropOffPoint struct {
 	HouseNumberSuffix string
 	City              string        `gorm:"not null"`
 	Country           string        `gorm:"not null"`
+	Deactivated       bool          `gorm:"default:false"`
 	PackageTypes      []PackageType `gorm:"many2many:drop_off_point_package_types;"`
 }
 
@@ -36,6 +37,7 @@ func (d DropOffPoint) ModelToEntity() entities.DropOffPoint {
 		HouseNumberSuffix: d.HouseNumberSuffix,
 		City:              d.City,
 		Country:           d.Country,
+		Deactivated:       d.Deactivated,
 		PackageTypes:      pt,
 	}
 }

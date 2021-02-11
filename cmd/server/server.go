@@ -42,6 +42,7 @@ func main() {
 		&models.UserAddress{},
 		&models.UserRole{},
 		&models.Restaurant{},
+		&models.Supplier{},
 		&models.Package{},
 		&models.PackageType{},
 		&models.Return{},
