@@ -15,7 +15,7 @@ type UserAddressesHandler struct {
 type createAddressBody struct {
 	FirstName         string `json:"first_name" valid:"type(string),stringlength(2|100)"`
 	LastName          string `json:"last_name" valid:"type(string),stringlength(2|100)"`
-	PostalCode        string `json:"postal_code" valid:"type(string),stringlength(6|10)"`
+	PostalCode        string `json:"postal_code" valid:"type(string),stringlength(2|10)"`
 	StreetName        string `json:"street_name" valid:"type(string),stringlength(2|100)"`
 	HouseNumber       string `json:"house_number" valid:"type(string),stringlength(1|10)"`
 	HouseNumberSuffix string `json:"house_number_suffix" valid:"type(string),optional"`
