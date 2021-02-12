@@ -125,6 +125,9 @@ func InitializeRoutes(r *mux.Router, db *gorm.DB) {
 	dropOffIntentsRouter.
 		HandleFunc("/", dih.CreateDropOffIntent).
 		Methods(http.MethodPost, http.MethodOptions)
+	dropOffIntentsRouter.
+		HandleFunc("/", dih.ListDropOffIntents).
+		Methods(http.MethodGet, http.MethodOptions)
 
 	doh := handlers.DropOffPointsHandler{DB: db}
 	myRouter.HandleFunc("/drop-off-points/", doh.ListMyDropOffPoints).

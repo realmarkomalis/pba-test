@@ -50,3 +50,24 @@ func (h DropOffIntentsHandler) CreateDropOffIntent(w http.ResponseWriter, r *htt
 
 	writeSuccesResponse(di, w)
 }
+
+func (h DropOffIntentsHandler) ListDropOffIntents(w http.ResponseWriter, r *http.Request) {
+	u := getUserFromRequestContext(r, w)
+	if u == nil {
+		return
+	}
+
+	dr := repositories.DropOffIntentsRepository{DB: h.DB}
+	di, err := dr.GetUserDropOffIntents(u.ID)
+	if err != nil {
+		writeErrorResponse([]entities.APIError{
+			{
+				Message: err.Error(),
+				Code:    "0",
+			},
+		}, http.StatusBadRequest, w)
+		return
+	}
+
+	writeSuccesResponse(di, w)
+}
